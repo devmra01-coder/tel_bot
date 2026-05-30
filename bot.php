@@ -25,19 +25,12 @@ $serverName = "sql12.freesqldatabase.com";
 $userName = "sql12828766";
 $password = "pKBSUXALkD";
 $dbName = "sql12828766";
-
-// ایجاد اتصال
+ 
 $conn = mysqli_connect($serverName, $userName, $password, $dbName);
 
-// بررسی اتصال
-if (!$conn) {
-    die("اتصال با شکست مواجه شد: " . mysqli_connect_error());
-}
-
-// تنظیم کاراکترست برای نمایش درست حروف فارسی
+ 
 mysqli_set_charset($conn, "utf8mb4");
-
-echo "اتصال با موفقیت برقرار شد";
+ 
  
 $pastName = "TASMD";
 $adminsGap = "-5116799198";
