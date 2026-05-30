@@ -29,9 +29,6 @@ $dbName = "sql12828766";
 $conn = mysqli_connect($serverName, $userName, $password, $dbName);
 
  
-mysqli_set_charset($conn, "utf8mb4");
- 
- 
 $pastName = "TASMD";
 $adminsGap = "-5116799198";
 //----------
