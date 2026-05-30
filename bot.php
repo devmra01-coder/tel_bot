@@ -20,11 +20,25 @@ file_put_contents('log.txt', file_get_contents('php://input'), FILE_APPEND);
 //---------------------------------------------------------------------------------------------
 define('API_KEY', '8973031455:AAFLRPS2L9PBFkZVGNw_zrw09OtxN7Pysxs'); // توکن ربات رو به جای عبارت TOKEN قرار بدید
 $admins = [7015879742,6707399737,1317073026,6788568011,2022010806,5958639761,6389723091,7165556662]; // آیدی عددی ادمین های ربات رو در این آرایه قرار بدید قرار بدید
+ 
 $serverName = "sql12.freesqldatabase.com";
-$userName = "sql12828766"; // یوزرنیم دیتابیس
-$password = "pKBSUXALkD"; // پسورد دیتابیس
-$dbName = "sql12828766"; // نام دیتابیسیس
+$userName = "sql12828766";
+$password = "pKBSUXALkD";
+$dbName = "sql12828766";
+
+// ایجاد اتصال
 $conn = mysqli_connect($serverName, $userName, $password, $dbName);
+
+// بررسی اتصال
+if (!$conn) {
+    die("اتصال با شکست مواجه شد: " . mysqli_connect_error());
+}
+
+// تنظیم کاراکترست برای نمایش درست حروف فارسی
+mysqli_set_charset($conn, "utf8mb4");
+
+echo "اتصال با موفقیت برقرار شد";
+ 
 $pastName = "TASMD";
 $adminsGap = "-5116799198";
 //----------
