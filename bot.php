@@ -18,49 +18,29 @@ file_put_contents('log.txt', file_get_contents('php://input'), FILE_APPEND);
 
 
 //---------------------------------------------------------------------------------------------
-define('API_KEY', '8973031455:AAFLRPS2L9PBFkZVGNw_zrw09OtxN7Pysxs'); // توکن ربات رو به جای عبارت TOKEN قرار بدید
-$admins = [7761540434,7015879742,6707399737,1317073026,6788568011,2022010806,5958639761,6389723091,7165556662]; // آیدی عددی ادمین های ربات رو در این آرایه قرار بدید قرار بدید
- 
-$serverName = "sql12.freesqldatabase.com";
-$userName = "sql12828766";
-$password = "pKBSUXALkD";
-$dbName = "sql12828766";
- 
-$conn = mysqli_connect($serverName, $userName, $password, $dbName);
-
- 
-$pastName = "TASMD";
-$adminsGap = "-7761540434";
-//----------
-$adminsTable = "$pastName-admins";
-$itemsTable = "$pastName-items";
-$soldiersTable = "$pastName-soldiers";
-$peopleTable = "$pastName-people";
-$buildingsTable = "$pastName-buildings";
-$campsTable = "$pastName-camps";
-//-----
-$citiesTable = "$pastName-cities";
-$cityBuildingsTable = "$pastName-cityBuildings";
-$cityItemsTable = "$pastName-cityItems";
-$citySoldiersTable = "$pastName-citySoldiers";
-$cityPeopleTable = "$pastName-cityPeople";
-$cityCampsTable = "$pastName-cityCamps";
-//----------important files-------------
-include './telegram.php';
-include './db.php';
-include './functions.php';
-include './keyboards.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/db-json.php';
+require_once __DIR__ . '/helpers.php';
+require_once __DIR__ . '/telegram.php';
+require_once __DIR__ . '/keyboards.php';
+require_once __DIR__ . '/admin-panel.php';
+// convenience aliases
+$admins = Config::getInstance()->getAdminIds();
+$pastName = BOT_PREFIX;
+$adminsGap = ADMIN_GAP_ID;
+// db instance is $db from db-json.php
 //---------------------------
 
+// route includes depending on chat type
 if ($tc == "private") {
-    include './admin-panel.php';
+    include_once __DIR__ . '/admin-panel.php';
 } else {
-    include './management-panel.php';
-    include './bot-sections/financial.php';
-    if ($from_id == $playerId) {
-        include './bot-sections/player-panel.php';
-        include './bot-sections/upgrade.php';
-        include './bot-sections/trading.php';
+    include_once __DIR__ . '/management-panel.php';
+    include_once __DIR__ . '/bot-sections/financial.php';
+    if (isset($playerId) && $from_id == $playerId) {
+        include_once __DIR__ . '/bot-sections/player-panel.php';
+        include_once __DIR__ . '/bot-sections/upgrade.php';
+        include_once __DIR__ . '/bot-sections/trading.php';
     }
 }
 
@@ -74,4 +54,4 @@ if ($text == "/id") {
         'parse_mode' => "HTML",
     ]);
 }
-unlink("error_log");
+@unlink(__DIR__ . '/error_log');

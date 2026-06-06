@@ -54,10 +54,12 @@ function bot($method, $datas = [])
     curl_setopt($ch, CURLOPT_POSTFIELDS, $datas);
     $res = curl_exec($ch);
     if (curl_error($ch)) {
-        var_dump(curl_error($ch));
-    } else {
-        return json_decode($res);
+        if (defined('DEBUG_MODE') && DEBUG_MODE) {
+            error_log('Curl error: ' . curl_error($ch));
+        }
+        return null;
     }
+    return json_decode($res);
 }
 function answerCallbackQuery($callback_query_id, $text, $show_alert)
 {
