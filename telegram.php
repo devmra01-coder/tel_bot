@@ -1,27 +1,55 @@
 <?php
-
-
 $update = json_decode(file_get_contents('php://input'));
-$message = $update->message;
-$chat_id = isset($update->message->chat->id) ? $update->message->chat->id : $update->callback_query->message->chat->id;
-$tc = $update->message->chat->type;
-$message_id = isset($message->message_id) ? $message->message_id : $update->callback_query->message->message_id;;
-$from_id = isset($update->message->from->id) ? $update->message->from->id : $update->callback_query->from->id;
-$text = isset($update->message->text) ? $update->message->text : $update->callback_query->data;
-$textMessage =$update->message->text;
 
-$first_name = $message->from->first_name;
-$last_name = $message->from->last_name;
-$user_name = $message->from->username;
-$link = "<a href='tg://user?id=$from_id'>$from_id</a>";
-$sticker_id = $message->sticker->file_id;
-$video_id = $message->video->file_id;
-$voice_id = $message->voice->file_id;
-$file_id = $message->document->file_id;
-$animation_id = $message->animation->file_id;
-$music_id = $message->audio->file_id;
-$photo0_id = $message->photo[0]->file_id;
-$cap = $message->caption;
+// normalize update parts safely
+$message = isset($update->message) ? $update->message : null;
+$callback_query = isset($update->callback_query) ? $update->callback_query : null;
+
+$chat_id = null;
+if ($message && isset($message->chat->id)) {
+    $chat_id = $message->chat->id;
+} elseif ($callback_query && isset($callback_query->message->chat->id)) {
+    $chat_id = $callback_query->message->chat->id;
+}
+
+$tc = isset($message->chat->type) ? $message->chat->type : null;
+
+$message_id = null;
+if ($message && isset($message->message_id)) {
+    $message_id = $message->message_id;
+} elseif ($callback_query && isset($callback_query->message->message_id)) {
+    $message_id = $callback_query->message->message_id;
+}
+
+$from_id = null;
+if ($message && isset($message->from->id)) {
+    $from_id = $message->from->id;
+} elseif ($callback_query && isset($callback_query->from->id)) {
+    $from_id = $callback_query->from->id;
+}
+
+$text = null;
+if ($message && isset($message->text)) {
+    $text = $message->text;
+} elseif ($callback_query && isset($callback_query->data)) {
+    $text = $callback_query->data;
+}
+
+$textMessage = $message && isset($message->text) ? $message->text : null;
+
+$first_name = $message && isset($message->from->first_name) ? $message->from->first_name : null;
+$last_name = $message && isset($message->from->last_name) ? $message->from->last_name : null;
+$user_name = $message && isset($message->from->username) ? $message->from->username : null;
+$link = $from_id ? "<a href='tg://user?id=$from_id'>$from_id</a>" : null;
+
+$sticker_id = $message && isset($message->sticker->file_id) ? $message->sticker->file_id : null;
+$video_id = $message && isset($message->video->file_id) ? $message->video->file_id : null;
+$voice_id = $message && isset($message->voice->file_id) ? $message->voice->file_id : null;
+$file_id = $message && isset($message->document->file_id) ? $message->document->file_id : null;
+$animation_id = $message && isset($message->animation->file_id) ? $message->animation->file_id : null;
+$music_id = $message && isset($message->audio->file_id) ? $message->audio->file_id : null;
+$photo0_id = $message && isset($message->photo[0]->file_id) ? $message->photo[0]->file_id : null;
+$cap = $message && isset($message->caption) ? $message->caption : null;
 //--------------------------------------
 
 //--------------------------------------
