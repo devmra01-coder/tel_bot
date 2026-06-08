@@ -17,6 +17,28 @@ file_put_contents('log.txt', file_get_contents('php://input'), FILE_APPEND);
 //--------------------------------------------------------------------------------------------
 
 
+error_reporting(E_ALL);
+ini_set('display_errors', 1);
+ini_set('log_errors', 1);
+ini_set('error_log', '/tmp/error.log');
+
+// لاگ رو توی خروجی هم نشون بده
+$logFile = fopen('/tmp/debug.log', 'a');
+fwrite($logFile, "[" . date('Y-m-d H:i:s') . "] Started\n");
+fclose($logFile);
+
+// تابع برای لاگ کردن
+function logMsg($msg) {
+    $logFile = fopen('/tmp/debug.log', 'a');
+    fwrite($logFile, "[" . date('Y-m-d H:i:s') . "] " . $msg . "\n");
+    fclose($logFile);
+}
+
+// تست - اول لاگ رو چاپ کن
+echo "Debug: Bot starting...\n";
+logMsg("Bot starting...");
+
+
 //---------------------------------------------------------------------------------------------
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db-json.php';
