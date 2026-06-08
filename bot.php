@@ -16,15 +16,6 @@ file_put_contents('log.txt', file_get_contents('php://input'), FILE_APPEND);
 // if (!$ok) die("Sik!");
 //--------------------------------------------------------------------------------------------
 
-//----------get-id-----------
-if ($text == "/id") {
-    bot('sendMessage', [
-        'chat_id' => $chat_id,
-        'text' => "<code>$chat_id</code>",
-        'parse_mode' => "HTML",
-    ]);
-}
-
 
 //---------------------------------------------------------------------------------------------
 require_once __DIR__ . '/config.php';
