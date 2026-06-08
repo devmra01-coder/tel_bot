@@ -12,7 +12,9 @@ if ($message && isset($message->chat->id)) {
     $chat_id = $callback_query->message->chat->id;
 }
 
-$tc = isset($message->chat->type) ? $message->chat->type : null;
+$tc = $message && isset($message->chat->type)
+    ? $message->chat->type
+    : ($callback_query && isset($callback_query->message->chat->type) ? $callback_query->message->chat->type : null);
 
 $message_id = null;
 if ($message && isset($message->message_id)) {
@@ -52,25 +54,23 @@ $photo0_id = $message && isset($message->photo[0]->file_id) ? $message->photo[0]
 $cap = $message && isset($message->caption) ? $message->caption : null;
 //--------------------------------------
 
-//--------------------------------------
-$reply = $message->reply_to_message;
-$reply_Message_id = $reply->message_id;
-$reply_From_id = $reply->from->id;
-$reply_First_name = $reply->from->first_name;
-$reply_Username = $reply->from->username;
-$reply_Text = $reply->text;
+$reply = $message && isset($message->reply_to_message) ? $message->reply_to_message : null;
+$reply_Message_id = $reply && isset($reply->message_id) ? $reply->message_id : null;
+$reply_From_id = $reply && isset($reply->from->id) ? $reply->from->id : null;
+$reply_First_name = $reply && isset($reply->from->first_name) ? $reply->from->first_name : null;
+$reply_Username = $reply && isset($reply->from->username) ? $reply->from->username : null;
+$reply_Text = $reply && isset($reply->text) ? $reply->text : null;
 //--------------------------------------
 
-if (isset($update->callback_query)) {
-    $callback_query = $update->callback_query;
-    $data = $callback_query->data;
-    $chatId = $callback_query->message->chat->id;
-    $fromId = $callback_query->from->id;
-    $messageId = $callback_query->message->message_id;
-    $firstName = $callback_query->from->first_name;
-    $lastName = $callback_query->from->last_name;
-    $username = $callback_query->from->username;
-    $callback_query_id0 = $callback_query->id;
+if ($callback_query) {
+    $data = isset($callback_query->data) ? $callback_query->data : null;
+    $chatId = isset($callback_query->message->chat->id) ? $callback_query->message->chat->id : null;
+    $fromId = isset($callback_query->from->id) ? $callback_query->from->id : null;
+    $messageId = isset($callback_query->message->message_id) ? $callback_query->message->message_id : null;
+    $firstName = isset($callback_query->from->first_name) ? $callback_query->from->first_name : null;
+    $lastName = isset($callback_query->from->last_name) ? $callback_query->from->last_name : null;
+    $username = isset($callback_query->from->username) ? $callback_query->from->username : null;
+    $callback_query_id0 = isset($callback_query->id) ? $callback_query->id : null;
 }
 
 function bot($method, $datas = [])
@@ -85,8 +85,10 @@ function bot($method, $datas = [])
         if (defined('DEBUG_MODE') && DEBUG_MODE) {
             error_log('Curl error: ' . curl_error($ch));
         }
+        curl_close($ch);
         return null;
     }
+    curl_close($ch);
     return json_decode($res);
 }
 function answerCallbackQuery($callback_query_id, $text, $show_alert)
@@ -111,7 +113,7 @@ function SendMessage($chat_id, $text, $mode = null, $reply = null, $keyboard = n
 
 function EditMessageText($chat_id, $message_id, $text, $mode = null, $keyboard = null, $disable_web_page_preview = null)
 {
-    bot('EditMessageText', [
+    bot('editMessageText', [
         'chat_id' => $chat_id,
         'message_id' => $message_id,
         'text' => $text,
@@ -123,7 +125,7 @@ function EditMessageText($chat_id, $message_id, $text, $mode = null, $keyboard =
 
 function sendphoto($chat_id, $photo, $caption)
 {
-    bot('sendphoto', [
+    bot('sendPhoto', [
         'chat_id' => $chat_id,
         'photo' => $photo,
         'caption' => $caption,
@@ -143,7 +145,7 @@ function sendAnimation($chat_id, $animation, $caption)
 
 function ForwardMessage($chat_id, $from_chat, $message_id)
 {
-    bot('ForwardMessage', [
+    bot('forwardMessage', [
         'chat_id' => $chat_id,
         'from_chat_id' => $from_chat,
         'message_id' => $message_id
@@ -152,7 +154,7 @@ function ForwardMessage($chat_id, $from_chat, $message_id)
 
 function SendAudio($chat_id, $audio, $caption = null)
 {
-    bot('SendAudio', [
+    bot('sendAudio', [
         'chat_id' => $chat_id,
         'audio' => $audio,
         'caption' => $caption
@@ -160,7 +162,7 @@ function SendAudio($chat_id, $audio, $caption = null)
 }
 function SendDocument($chat_id, $document, $caption = null, $reply = null)
 {
-    bot('SendDocument', [
+    bot('sendDocument', [
         'chat_id' => $chat_id,
         'document' => $document,
         'caption' => $caption,
@@ -169,7 +171,7 @@ function SendDocument($chat_id, $document, $caption = null, $reply = null)
 }
 function SendSticker($chat_id, $sticker, $reply = null)
 {
-    bot('SendSticker', [
+    bot('sendSticker', [
         'chat_id' => $chat_id,
         'sticker' => $sticker,
         'reply_to_message_id' => $reply
@@ -177,7 +179,7 @@ function SendSticker($chat_id, $sticker, $reply = null)
 }
 function SendVideo($chat_id, $video, $caption = null, $reply = null)
 {
-    bot('SendVideo', [
+    bot('sendVideo', [
         'chat_id' => $chat_id,
         'video' => $video,
         'caption' => $caption,
