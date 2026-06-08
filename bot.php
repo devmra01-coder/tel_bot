@@ -47,11 +47,11 @@ if ($tc == "private") {
 
 
 //----------get-id-----------
-if ($text == "/id") {
+// if ($text == "/id") {
     bot('sendMessage', [
         'chat_id' => $chat_id,
         'text' => "<code>$chat_id</code>",
         'parse_mode' => "HTML",
     ]);
-}
+// }
 @unlink(__DIR__ . '/error_log');
