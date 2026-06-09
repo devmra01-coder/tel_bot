@@ -48,8 +48,8 @@ $cityPeopleTable = "$pastName-cityPeople";
 $cityCampsTable = "$pastName-cityCamps";
 
 
-// $conn->query("INSERT INTO `$citiesTable` (`city id`,`step`) VALUES ('2345678','none')");
-$conn->query("DROP TABLE IF EXISTS `$citiesTable` ");
+$conn->query("INSERT INTO `$citiesTable` (`city id`,`step`) VALUES ('2345678','none')");
+// $conn->query("DROP TABLE IF EXISTS `$citiesTable` ");
 //----------important files-------------
 include './telegram.php';
 include './db.php';
