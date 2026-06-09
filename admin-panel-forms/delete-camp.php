@@ -11,6 +11,8 @@
 } else if ($theAdminStep == "delete-camp" && $text != "🔙") {
     $camp = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$campsTable` WHERE `english name` = '{$text}' LIMIT 1"));
     if (!$camp) {
+     
+        $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
         bot('sendMessage', [
             'chat_id' => $chat_id,
             'text' => "هیچ کمپی با این نام در ربات وجود ندارد! \n لطفا نام وارده را برسی کنید و در صورت وجود خطا در آن، نام صحیح را در اینجا وارد کنید.",
