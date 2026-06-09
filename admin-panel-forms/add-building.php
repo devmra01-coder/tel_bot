@@ -7,7 +7,7 @@
         'reply_to_message_id' => $message_id,
         'reply_markup' => $adminBack,
     ]);
-    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-1' WHERE `id`='{$from_id}'LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-1' WHERE `id`='{$from_id}' LIMIT 1");
 } else if ($theAdminStep == "add-building-1" && $text != "🔙") {
     bot('sendMessage', [
         'chat_id' => $chat_id,
@@ -15,8 +15,8 @@
         'parse_mode' => "HTML",
         'reply_to_message_id' => $message_id,
     ]);
-    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-2-$text' WHERE `id`='{$from_id}'LIMIT 1");
-    $conn->query("UPDATE `$adminsTable` SET `thing`='{$text}' WHERE `id`='{$from_id}'LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-2-$text' WHERE `id`='{$from_id}' LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `thing`='{$text}' WHERE `id`='{$from_id}' LIMIT 1");
     $conn->query("ALTER TABLE `$cityBuildingsTable` ADD `{$text}` varchar(255)");
     sendDataForDb($buildingsTable,  "english name", $text);
 } else if (strpos($theAdminStep, "add-building-2-") !== false && $text != "🔙") {
@@ -40,8 +40,8 @@
         'reply_to_message_id' => $message_id,
         'reply_markup' => $adminBack,
     ]);
-    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-3-$idm' WHERE `id`='{$from_id}'LIMIT 1");
-    $conn->query("UPDATE `$buildingsTable` SET `persian name`='{$text}' WHERE `english name`='$idm'LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-3-$idm' WHERE `id`='{$from_id}' LIMIT 1");
+    $conn->query("UPDATE `$buildingsTable` SET `persian name`='{$text}' WHERE `english name`='$idm' LIMIT 1");
 } else if (strpos($theAdminStep, "add-building-3-") !== false && $text != "🔙") {
     $idm = str_replace("add-building-3-", '', $theAdminStep);
     $itemsList = mysqli_query($conn, "SELECT `persian name` FROM `$itemsTable`");
@@ -63,8 +63,8 @@
         'reply_to_message_id' => $message_id,
         'reply_markup' => $adminDoseNotNeedIt,
     ]);
-    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-4-$idm' WHERE `id`='{$from_id}'LIMIT 1");
-    $conn->query("UPDATE `$buildingsTable` SET `upgrade items numbers 1`='{$text}' WHERE `english name`='$idm'LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-4-$idm' WHERE `id`='{$from_id}' LIMIT 1");
+    $conn->query("UPDATE `$buildingsTable` SET `upgrade items numbers 1`='{$text}' WHERE `english name`='$idm' LIMIT 1");
 } else if (strpos($theAdminStep, "add-building-4-") !== false && $text != "🔙") {
     $idm = str_replace("add-building-4-", '', $theAdminStep);
     $itemsList = mysqli_query($conn, "SELECT `persian name` FROM `$itemsTable`");
@@ -87,7 +87,7 @@
         'reply_markup' => $adminDoseNotNeedIt,
     ]);
     $conn->query("UPDATE `$adminsTable` SET `step`='add-building-5-$idm' WHERE `id`='{$from_id}'LIMIT 1");
-    $conn->query("UPDATE `$buildingsTable` SET `upgrade items numbers 2`='{$text}' WHERE `english name`='$idm'LIMIT 1");
+    $conn->query("UPDATE `$buildingsTable` SET `upgrade items numbers 2`='{$text}' WHERE `english name`='$idm' LIMIT 1");
 } else if (strpos($theAdminStep, "add-building-5-") !== false && $text != "🔙") {
     $idm = str_replace("add-building-5-", '', $theAdminStep);
     $myItemList = [];
@@ -106,8 +106,8 @@
         'reply_markup' => $adminBack,
     ]);
 
-    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-6-$idm' WHERE `id`='{$from_id}'LIMIT 1");
-    $conn->query("UPDATE `$buildingsTable` SET `upgrade items numbers 3`='{$text}' WHERE `english name`='$idm'LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-6-$idm' WHERE `id`='{$from_id}' LIMIT 1");
+    $conn->query("UPDATE `$buildingsTable` SET `upgrade items numbers 3`='{$text}' WHERE `english name`='$idm' LIMIT 1");
 } else if (strpos($theAdminStep, "add-building-6-") !== false && $text != "🔙") {
     $idm = str_replace("add-building-6-", '', $theAdminStep);
     bot('sendMessage', [
@@ -116,8 +116,8 @@
         'parse_mode' => "HTML",
         'reply_to_message_id' => $message_id,
     ]);
-    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-7-$idm' WHERE `id`='{$from_id}'LIMIT 1");
-    $conn->query("UPDATE `$buildingsTable` SET `efficiency item`='{$text}' WHERE `english name`='$idm'LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-7-$idm' WHERE `id`='{$from_id}' LIMIT 1");
+    $conn->query("UPDATE `$buildingsTable` SET `efficiency item`='{$text}' WHERE `english name`='$idm' LIMIT 1");
 } else if (strpos($theAdminStep, "add-building-7-") !== false && $text != "🔙") {
     $idm = str_replace("add-building-7-", '', $theAdminStep);
     bot('sendMessage', [
@@ -126,8 +126,8 @@
         'parse_mode' => "HTML",
         'reply_to_message_id' => $message_id,
     ]);
-    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-8-$idm' WHERE `id`='{$from_id}'LIMIT 1");
-    $conn->query("UPDATE `$buildingsTable` SET `efficiency number`='{$text}' WHERE `english name`='$idm'LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-8-$idm' WHERE `id`='{$from_id}' LIMIT 1");
+    $conn->query("UPDATE `$buildingsTable` SET `efficiency number`='{$text}' WHERE `english name`='$idm' LIMIT 1");
 } else if (strpos($theAdminStep, "add-building-8-") !== false && $text != "🔙") {
     $idm = str_replace("add-building-8-", '', $theAdminStep);
     $buildingT = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$buildingsTable` WHERE `english name` = '{$idm}' LIMIT 1"));
@@ -139,8 +139,8 @@
         'reply_to_message_id' => $message_id,
     ]);
     $str = "$persianName@$text";
-    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-9-$idm' WHERE `id`='{$from_id}'LIMIT 1");
-    $conn->query("UPDATE `$buildingsTable` SET `first level`='{$text}' WHERE `english name`='$idm'LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-9-$idm' WHERE `id`='{$from_id}' LIMIT 1");
+    $conn->query("UPDATE `$buildingsTable` SET `first level`='{$text}' WHERE `english name`='$idm' LIMIT 1");
     $conn->query("UPDATE `$cityBuildingsTable` SET `{$idm}`='{$str}'");
 } else if (strpos($theAdminStep, "add-building-9-") !== false && $text != "🔙") {
     $idm = str_replace("add-building-9-", '', $theAdminStep);
@@ -151,8 +151,8 @@
         'reply_to_message_id' => $message_id,
         'reply_markup' => $adminYesOrNo,
     ]);
-    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-10-$idm' WHERE `id`='{$from_id}'LIMIT 1");
-    $conn->query("UPDATE `$buildingsTable` SET `last level`='{$text}' WHERE `english name`='$idm'LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='add-building-10-$idm' WHERE `id`='{$from_id}' LIMIT 1");
+    $conn->query("UPDATE `$buildingsTable` SET `last level`='{$text}' WHERE `english name`='$idm' LIMIT 1");
 } else if (strpos($theAdminStep, "add-building-10-") !== false && $text != "🔙") {
     $idm = str_replace("add-building-10-", '', $theAdminStep);
     if ($text == "✅") {
@@ -176,9 +176,10 @@
         $conn->query("DELETE FROM `$buildingsTable` WHERE `english name` = '{$idm}'");
         $conn->query("ALTER TABLE `$cityBuildingsTable` DROP COLUMN `{$idm}`");
     }
-    $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}'LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
 } else {
     if ($text == "🔙") {
+        $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
         $idm;
         switch ($theAdminStep) {
             case strpos($theAdminStep, "add-building-2-") !== false:
@@ -211,6 +212,5 @@
         }
         $conn->query("DELETE FROM `$buildingsTable` WHERE `english name` = '{$idm}'");
         $conn->query("ALTER TABLE `$cityBuildingsTable` DROP COLUMN `{$idm}`");
-        $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}'LIMIT 1");
     }
 }
