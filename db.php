@@ -97,11 +97,10 @@ try {
     )");
 
     $conn->exec("CREATE TABLE IF NOT EXISTS $adminsTable (
-        -- خط زیر اصلاح شده است: بک‌تیک (`) به دابل کوتیشن (") تبدیل شد
         \"id\" varchar(50) NOT NULL PRIMARY KEY,
-        -- خط زیر اصلاح شده است: بک‌تیک (`) به دابل کوتیشن (") تبدیل شد
+        
         \"step\" varchar(50) NOT NULL,
-        -- خط زیر اصلاح شده است: بک‌تیک (`) به دابل کوتیشن (") تبدیل شد
+        
         \"thing\" varchar(50) NOT NULL
     )");
 
