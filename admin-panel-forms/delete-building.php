@@ -9,7 +9,7 @@ if ($text == "[❌]- حذف ساختمان" && $theAdminStep == "none") {
     ]);
 } 
 // ۲. پردازش نام ساختمان (فقط اگر مرحله واقعاً delete-building باشد)
-else if ($theAdminStep == "delete-building" && $text == "🔙" ) {
+else if ($theAdminStep == "delete-building" && $text != "🔙" ) {
     
         // جستجوی ساختمان
         $result = $conn->query("SELECT * FROM `$buildingsTable` WHERE `english name` = '{$conn->real_escape_string($text)}' LIMIT 1");
