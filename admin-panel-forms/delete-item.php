@@ -11,6 +11,7 @@
 } else if ($theAdminStep == "delete-item" && $text != "🔙") {
     $item = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$itemsTable` WHERE `english name` = '{$text}' LIMIT 1"));
     if (!$item) {
+            $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
         bot('sendMessage', [
             'chat_id' => $chat_id,
             'text' => "هیچ آیتمی با این نام در ربات وجود ندارد! \n لطفا نام وارده را برسی کنید و در صورت وجود خطا در آن، نام صحیح را در اینجا وارد کنید.",
