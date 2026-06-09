@@ -3,13 +3,13 @@
 // اطمینان حاصل کنید که $conn با استفاده از PDO به دیتابیس PostgreSQL متصل شده است.
 // مثال:
 // try {
-//     $host = 'your_host'; // مثل 'dpg-d8juanreo5us738o1fc0-a.oregon-postgres.render.com'
-//     $db   = 'your_db';   // مثل 'mysql_1v97'
-//     $user = 'your_user'; // مثل 'root'
-//     $pass = 'your_password'; // مثل 'KjBX7PPKH71yB70UeyIcDsrJn6qXQBYY'
+//     $host = 'your_host';
+//     $db   = 'your_db';
+//     $user = 'your_user';
+//     $pass = 'your_password';
 //     $conn = new PDO("pgsql:host=$host;dbname=$db", $user, $pass);
 //     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-//     $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC); // برای fetch_assoc شدن پیش‌فرض
+//     $conn->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
 // } catch(PDOException $e) {
 //     die("Connection failed: " . $e->getMessage());
 // }
@@ -17,8 +17,7 @@
 
 
 // --- نام جداول ---
-// در PostgreSQL برای نام جداول و ستون‌هایی که فاصله یا کاراکتر خاص دارند، از دابل کوتیشن (") استفاده می‌شود.
-// بک‌تیک (`) مخصوص MySQL است.
+// در PostgreSQL، نام جداول و ستون‌ها را داخل دابل کوتیشن (") قرار می‌دهیم.
 $itemsTable = '"items"';
 $soldiersTable = '"soldiers"';
 $peopleTable = '"people"';
@@ -35,7 +34,6 @@ $cityCampsTable = '"cityCamps"';
 
 // ۱. ابتدا ساخت تمامی جداول (اگر وجود نداشته باشند)
 try {
-    // استفاده از $conn->exec() برای دستوراتی که نتیجه‌ای برنمی‌گردانند (مثل CREATE TABLE)
     $conn->exec("CREATE TABLE IF NOT EXISTS $itemsTable (
         \"persian name\" varchar(100) NOT NULL,
         \"english name\" varchar(50) NOT NULL PRIMARY KEY,
@@ -83,22 +81,28 @@ try {
     $conn->exec("CREATE TABLE IF NOT EXISTS $citiesTable (
         \"city id\" varchar(50) NOT NULL PRIMARY KEY,
         \"player id\" varchar(50) NOT NULL,
-        `step` varchar(50) NOT NULL,
-        `Check` varchar(50) NOT NULL,
-        `family` varchar(50) NOT NULL,
-        `city name` text NOT NULL,
-        `lord name` text NOT NULL,
-        `maghsad` varchar(50) NOT NULL,
-        `sendItem` varchar(50) NOT NULL,
-        `sendItemNum` varchar(50) NOT NULL,
-        `getItem` varchar(50) NOT NULL,
-        `getItemNum` varchar(50) NOT NULL
+        -- خط زیر اصلاح شده است: بک‌تیک (`) به دابل کوتیشن (") تبدیل شد
+        \"step\" varchar(50) NOT NULL,
+        -- خط زیر اصلاح شده است: بک‌تیک (`) به دابل کوتیشن (") تبدیل شد
+        \"Check\" varchar(50) NOT NULL,
+        -- خط زیر اصلاح شده است: بک‌تیک (`) به دابل کوتیشن (") تبدیل شد
+        \"family\" varchar(50) NOT NULL,
+        \"city name\" text NOT NULL,
+        \"lord name\" text NOT NULL,
+        \"maghsad\" varchar(50) NOT NULL,
+        \"sendItem\" varchar(50) NOT NULL,
+        \"sendItemNum\" varchar(50) NOT NULL,
+        \"getItem\" varchar(50) NOT NULL,
+        \"getItemNum\" varchar(50) NOT NULL
     )");
 
     $conn->exec("CREATE TABLE IF NOT EXISTS $adminsTable (
-        `id` varchar(50) NOT NULL PRIMARY KEY,
-        `step` varchar(50) NOT NULL,
-        `thing` varchar(50) NOT NULL
+        -- خط زیر اصلاح شده است: بک‌تیک (`) به دابل کوتیشن (") تبدیل شد
+        \"id\" varchar(50) NOT NULL PRIMARY KEY,
+        -- خط زیر اصلاح شده است: بک‌تیک (`) به دابل کوتیشن (") تبدیل شد
+        \"step\" varchar(50) NOT NULL,
+        -- خط زیر اصلاح شده است: بک‌تیک (`) به دابل کوتیشن (") تبدیل شد
+        \"thing\" varchar(50) NOT NULL
     )");
 
     // جداول مربوط به شهرها
@@ -106,11 +110,9 @@ try {
     $conn->exec("CREATE TABLE IF NOT EXISTS $cityItemsTable (\"city id\" varchar(50) NOT NULL PRIMARY KEY)");
     $conn->exec("CREATE TABLE IF NOT EXISTS $citySoldiersTable (\"city id\" varchar(50) NOT NULL PRIMARY KEY)");
     $conn->exec("CREATE TABLE IF NOT EXISTS $cityPeopleTable (\"city id\" varchar(50) NOT NULL PRIMARY KEY)");
-    $conn->exec("CREATE TABLE IF NOT EXISTS $cityCampsTable (\"city id` varchar(50) NOT NULL PRIMARY KEY)");
+    $conn->exec("CREATE TABLE IF NOT EXISTS $cityCampsTable (\"city id\" varchar(50) NOT NULL PRIMARY KEY)");
 
 } catch(PDOException $e) {
-    // در صورت بروز خطا در ساخت جدول، پیام خطا را نمایش دهید و اسکریپت را متوقف کنید.
-    // در محیط واقعی، این خطا را لاگ کنید.
     echo "Error creating tables: " . $e->getMessage();
     die();
 }
@@ -118,15 +120,14 @@ try {
 
 // ۲. حالا که جداول آماده هستند، اطلاعات را دریافت می‌کنیم
 //-------------------
-// استفاده از Prepared Statements برای جلوگیری از SQL Injection
 $stmtCity = $conn->prepare("SELECT * FROM $citiesTable WHERE \"city id\" = :chat_id LIMIT 1");
-$stmtCity->bindParam(':chat_id', $chat_id, PDO::PARAM_STR); // نوع داده را مشخص کنید
+$stmtCity->bindParam(':chat_id', $chat_id, PDO::PARAM_STR);
 $stmtCity->execute();
-$city = $stmtCity->fetch(); // fetch() به صورت پیش‌فرضASSOC برمی‌گرداند اگر تنظیم شده باشد
+$city = $stmtCity->fetch();
 
 // استفاده از عملگر null coalescing (??) برای مقادیر پیش‌فرض
-$playerCheck  = $city["Check"] ?? null;
-$playerStep   = $city["step"] ?? null;
+$playerCheck  = $city["Check"] ?? null; // اصلاح شده: از "Check" به جای `Check` استفاده شده
+$playerStep   = $city["step"] ?? null;   // اصلاح شده: از "step" به جای `step` استفاده شده
 $playerId     = $city["player id"] ?? null;
 $cityName     = $city["city name"] ?? null;
 $lordName     = $city["lord name"] ?? null;
@@ -137,17 +138,14 @@ $getItem      = $city['getItem'] ?? null;
 $getItemNum   = $city['getItemNum'] ?? null;
 
 //--------------------
-$stmtAdmin = $conn->prepare("SELECT * FROM $adminsTable WHERE `id` = :from_id LIMIT 1");
-$stmtAdmin->bindParam(':from_id', $from_id, PDO::PARAM_STR); // نوع داده را مشخص کنید
+$stmtAdmin = $conn->prepare("SELECT * FROM $adminsTable WHERE \"id\" = :from_id LIMIT 1"); // اصلاح شده: از "id" به جای `id`
+$stmtAdmin->bindParam(':from_id', $from_id, PDO::PARAM_STR);
 $stmtAdmin->execute();
 $getAdmins = $stmtAdmin->fetch();
-$theAdminStep = $getAdmins["step"] ?? null;
-$theAdminThing = $getAdmins["thing"] ?? null;
+$theAdminStep = $getAdmins["step"] ?? null; // اصلاح شده: از "step" به جای `step`
+$theAdminThing = $getAdmins["thing"] ?? null; // اصلاح شده: از "thing" به جای `thing`
 
 //------------------- دریافت لیست‌ها
-// برای دریافت لیست‌ها، از prepare و fetchAll(PDO::FETCH_COLUMN, 0) استفاده می‌کنیم
-// تا مستقیماً یک آرایه از مقادیر ستون اول (نام‌ها) دریافت کنیم.
-
 try {
     $stmtItemsList = $conn->prepare("SELECT \"persian name\" FROM $itemsTable");
     $stmtItemsList->execute();
@@ -172,11 +170,6 @@ try {
     $stmtCampsList = $conn->prepare("SELECT \"english name\" FROM $campsTable");
     $stmtCampsList->execute();
     $campsList = $stmtCampsList->fetchAll(PDO::FETCH_COLUMN, 0);
-
-    // اگر نیاز به چک کردن موفقیت fetchAll دارید:
-    // if ($itemsList === false || $itemsListEn === false /* ... بقیه لیست‌ها ... */) {
-    //     throw new PDOException("Error fetching lists from database.");
-    // }
 
 } catch(PDOException $e) {
     echo "Error fetching lists: " . $e->getMessage();
