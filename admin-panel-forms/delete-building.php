@@ -9,21 +9,14 @@ if ($text == "[❌]- حذف ساختمان" && $theAdminStep == "none") {
     ]);
 } 
 // ۲. پردازش نام ساختمان (فقط اگر مرحله واقعاً delete-building باشد)
-else if ($theAdminStep == "delete-building") {
+else if ($theAdminStep == "delete-building" && $text == "🔙" ) {
     
-    // اگر دکمه برگشت زده شد، مرحله را ریست کن
-    if ($text == "🔙") {
-        $theAdminStep = 'none';
-        $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
-        bot('sendMessage', ['chat_id' => $chat_id, 'text' => "عملیات لغو شد.", 'reply_markup' => $mainMenu]);
-    } 
-    else {
         // جستجوی ساختمان
         $result = $conn->query("SELECT * FROM `$buildingsTable` WHERE `english name` = '{$conn->real_escape_string($text)}' LIMIT 1");
         $building = mysqli_fetch_assoc($result);
 
         if (!$building) {
-            $theAdminStep = 'none';
+            $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
             bot('sendMessage', [
                 'chat_id' => $chat_id,
                 'text' => "❌ ساختمانی با این نام یافت نشد. دوباره تلاش کنید یا 🔙 را بزنید.",
@@ -31,7 +24,6 @@ else if ($theAdminStep == "delete-building") {
         } else {
             // حذف ساختمان از جداول
             $buildingName = $building['english name'];
-            $theAdminStep = 'none';
             
             // جلوگیری از خطای سینتکس با استفاده از بک‌تیک
             $conn->query("DELETE FROM `$buildingsTable` WHERE `english name` = '{$conn->real_escape_string($buildingName)}'");
@@ -46,6 +38,5 @@ else if ($theAdminStep == "delete-building") {
                 'reply_markup' => $mainMenu,
             ]);
             
-        }
     }
 }
