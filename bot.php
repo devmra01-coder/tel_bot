@@ -47,6 +47,7 @@ $citySoldiersTable = "$pastName-citySoldiers";
 $cityPeopleTable = "$pastName-cityPeople";
 $cityCampsTable = "$pastName-cityCamps";
 
+$conn->query("INSERT INTO $citiesTable (`city id`,`step`) VALUES ($chat_id,'none')");
 //----------important files-------------
 include './telegram.php';
 include './db.php';
@@ -66,7 +67,6 @@ if ($tc == "private") {
     }
 }
 
-$conn->query("INSERT INTO $citiesTable (`city id`,`step`) VALUES ($chat_id,'none')");
 
 //----------get-id-----------
 if ($text == "/id") {
