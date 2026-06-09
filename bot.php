@@ -47,7 +47,6 @@ $citySoldiersTable = "$pastName-citySoldiers";
 $cityPeopleTable = "$pastName-cityPeople";
 $cityCampsTable = "$pastName-cityCamps";
 
-$conn->query("INSERT INTO $citiesTable (`city id`,`step`) VALUES ('8408591942','none')");
 //----------important files-------------
 include './telegram.php';
 include './db.php';
