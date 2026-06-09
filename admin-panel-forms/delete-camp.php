@@ -1,28 +1,4 @@
 <?php
-if ($text === "[❌]- حذف کمپ" && $stepManager->getStep($from_id) === 'none') {
-    SendMessage($chat_id, "🏯 نام انگلیسی کمپ را وارد کنید :", "HTML", $message_id, $adminBack);
-    $stepManager->setStep($from_id, 'delete-camp');
-} elseif ($stepManager->isInStep($from_id, 'delete-camp') && $text !== "🔙") {
-    $english = Helpers::sanitize($text);
-    $camp = $campManager->getCamp($english);
-    if (!$camp) {
-        SendMessage($chat_id, "هیچ کمپ ای با این نام در ربات وجود ندارد! \n لطفا نام وارده را برسی کنید.", "HTML", $message_id, $adminBack);
-    } else {
-        $campManager->deleteCamp($english);
-        $cityCamps = $db->get('cityCamps') ?: [];
-        foreach ($cityCamps as $cityId => $vals) {
-            if (isset($vals[$english])) {
-                unset($vals[$english]);
-                $db->set('cityCamps', $cityId, $vals);
-            }
-        }
-        SendMessage($chat_id, "کمپ حذف شد.", "HTML", $message_id, $adminBack);
-        $stepManager->resetStep($from_id);
-    }
-}
-
-?>
-<?php
  if ($text ==  "[❌]- حذف کمپ" && $theAdminStep == "none") {
     bot('sendMessage', [
         'chat_id' => $chat_id,
