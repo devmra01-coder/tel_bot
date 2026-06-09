@@ -29,22 +29,6 @@ $port = 14319;
         
 $conn = mysqli_connect($serverName, $userName, $password, $dbName, $port);
 
-// ۱. تست اتصال به دیتابیس (مطمئن شویم دیتابیس وصل است)
-if ($conn->connect_error) {
-    die("Connection failed: " . $conn->connect_error);
-}
-
-// ۲. تست ثبت اطلاعات (یک INSERT ساده برای تست)
-$test_id = "123456789"; 
-$sql_test = "INSERT INTO `TASMD-cities` (`city id`,`step`) VALUES ($test_id,'none')";
-
-if ($conn->query($sql_test) === TRUE) {
-    echo "اطلاعات با موفقیت در دیتابیس ثبت شد!";
-} else {
-    // این قسمت به ما می‌گوید چرا ثبت نمی‌شود
-    echo "خطا در ثبت اطلاعات: " . $conn->error;
-}
-exit; // برای اینکه ربات جلوتر نرود و فقط همین تست اجرا شود
 
 $pastName = "TASMD";
 $adminsGap = "-7761540434";
@@ -62,6 +46,33 @@ $cityItemsTable = "$pastName-cityItems";
 $citySoldiersTable = "$pastName-citySoldiers";
 $cityPeopleTable = "$pastName-cityPeople";
 $cityCampsTable = "$pastName-cityCamps";
+
+
+$tables = [
+    $itemsTable, $soldiersTable, $peopleTable, $buildingsTable, $campsTable, 
+    $citiesTable, $adminsTable, $cityBuildingsTable, $cityItemsTable, 
+    $citySoldiersTable, $cityPeopleTable, $cityCampsTable
+];
+
+// ساخت یک رشته واحد از دستورات DROP
+$sql = "SET FOREIGN_KEY_CHECKS = 0;";
+foreach ($tables as $table) {
+    $sql .= "DROP TABLE IF EXISTS `$table`;";
+}
+$sql .= "SET FOREIGN_KEY_CHECKS = 1;";
+
+// اجرای همه دستورات با هم
+if ($conn->multi_query($sql)) {
+    echo "تمام جداول با موفقیت حذف شدند.";
+    // این خط برای تخلیه کردن نتایج multi_query ضروری است
+    while ($conn->next_result()) {;} 
+} else {
+    echo "خطا در حذف جداول: " . $conn->error;
+}
+?>
+
+
+
 //----------important files-------------
 include './telegram.php';
 include './db.php';
