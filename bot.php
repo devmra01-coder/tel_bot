@@ -21,11 +21,13 @@ file_put_contents('log.txt', file_get_contents('php://input'), FILE_APPEND);
 define('API_KEY', '8973031455:AAFLRPS2L9PBFkZVGNw_zrw09OtxN7Pysxs'); // توکن ربات رو به جای عبارت TOKEN قرار بدید
 $admins = [7761540434,7015879742,6707399737,1317073026,6788568011,2022010806,5958639761,6389723091,7165556662]; // آیدی عددی ادمین های ربات رو در این آرایه قرار بدید قرار بدید
  
-
- $conn = new PDO("pgsql:host=dpg-d8juanreo5us738o1fc0-a;dbname=mysql_1v97", "root", "KjBX7PPKH71yB70UeyIcDsrJn6qXQBYY");
-
- 
-
+$serverName = "acela.proxy.rlwy.net";
+$userName = "root";
+$password = "IRHMjKYYiWvjxEOnoStdxKHHGLdGFkzr";
+$dbName = "railway";
+$port = 14319;
+        
+$this->conn = mysqli_connect($serverName, $userName, $password, $dbName, $port);
  
 $pastName = "TASMD";
 $adminsGap = "-7761540434";
