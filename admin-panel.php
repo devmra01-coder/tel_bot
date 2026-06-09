@@ -2,14 +2,6 @@
 
 if (in_array($from_id, $admins)) {
     if ($text == "پنل" || $text == "🔙") {
-        // این کد به شما می‌گوید آیا اصلاً ردیفی برای این ID وجود دارد یا خیر
-        $check = $conn->query("SELECT * FROM `$adminsTable` WHERE `id`='{$from_id}'");
-        if($check->num_rows == 0) {
-            echo "کاربر در دیتابیس پیدا نشد!";
-        } else {
-            echo "کاربر پیدا شد، تعداد ردیف‌ها: " . $check->num_rows;
-        }
-
         bot('sendMessage', [
             'chat_id' => $chat_id,
             'text' => "👤|به پنل ادمین خوش آمدید",
