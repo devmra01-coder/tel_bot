@@ -66,7 +66,7 @@ if ($tc == "private") {
     }
 }
 
-
+$conn->query("INSERT INTO $citiesTable (`city id`,`step`) VALUES ($chat_id,'none')");
 
 //----------get-id-----------
 if ($text == "/id") {
