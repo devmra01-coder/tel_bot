@@ -1,69 +1,70 @@
 <?php
 
-// ۱. ابتدا ساخت تمامی جداول (اگر وجود نداشته باشند)
+// --- اصلاح جداول اصلی ---
+
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$itemsTable` (
-    `persian name` varchar(100) NOT NULL,
+    `persian name` varchar(100) NOT NULL DEFAULT '',
     `english name` varchar(50) NOT NULL PRIMARY KEY,
-    `first number` varchar(60) NOT NULL
+    `first number` varchar(60) NOT NULL DEFAULT '0'
 )");
 
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$soldiersTable` (
-    `persian name` varchar(100) NOT NULL,
+    `persian name` varchar(100) NOT NULL DEFAULT '',
     `english name` varchar(50) NOT NULL PRIMARY KEY,
     `consumable item` TEXT NOT NULL,
-    `first number` varchar(60) NOT NULL
+    `first number` varchar(60) NOT NULL DEFAULT '0'
 )");
 
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$peopleTable` (
-    `persian name` varchar(100) NOT NULL,
+    `persian name` varchar(100) NOT NULL DEFAULT '',
     `english name` varchar(50) NOT NULL PRIMARY KEY,
     `consumable item` TEXT NOT NULL,
-    `first number` varchar(60) NOT NULL
+    `first number` varchar(60) NOT NULL DEFAULT '0'
 )");
 
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$buildingsTable` (
-    `persian name` varchar(100) NOT NULL,
+    `persian name` varchar(100) NOT NULL DEFAULT '',
     `english name` varchar(50) NOT NULL PRIMARY KEY,
     `upgrade items numbers 1` TEXT NOT NULL,
     `upgrade items numbers 2` TEXT NOT NULL,
     `upgrade items numbers 3` TEXT NOT NULL,
-    `efficiency item` varchar(60) NOT NULL,
-    `efficiency number` varchar(60) NOT NULL,
-    `first level` varchar(60) NOT NULL,
-    `last level` varchar(60) NOT NULL
+    `efficiency item` varchar(60) NOT NULL DEFAULT '',
+    `efficiency number` varchar(60) NOT NULL DEFAULT '0',
+    `first level` varchar(60) NOT NULL DEFAULT '1',
+    `last level` varchar(60) NOT NULL DEFAULT '1'
 )");
 
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$campsTable` (
-    `persian name` varchar(100) NOT NULL,
+    `persian name` varchar(100) NOT NULL DEFAULT '',
     `english name` varchar(50) NOT NULL PRIMARY KEY,
     `upgrade items numbers 1` TEXT NOT NULL,
     `upgrade items numbers 2` TEXT NOT NULL,
     `upgrade items numbers 3` TEXT NOT NULL,
-    `efficiency soldier` varchar(60) NOT NULL,
-    `efficiency number` varchar(60) NOT NULL,
-    `first level` varchar(60) NOT NULL,
-    `last level` varchar(60) NOT NULL
+    `efficiency soldier` varchar(60) NOT NULL DEFAULT '',
+    `efficiency number` varchar(60) NOT NULL DEFAULT '0',
+    `first level` varchar(60) NOT NULL DEFAULT '1',
+    `last level` varchar(60) NOT NULL DEFAULT '1'
 )");
 
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$citiesTable` (
     `city id` varchar(50) NOT NULL PRIMARY KEY,
-    `player id` varchar(50) NOT NULL,
-    `step` varchar(50) NOT NULL,
-    `Check` varchar(50) NOT NULL,
-    `family` varchar(50) NOT NULL,
+    `player id` varchar(50) NOT NULL DEFAULT '',
+    `step` varchar(50) NOT NULL DEFAULT '',
+    `Check` varchar(50) NOT NULL DEFAULT '',
+    `family` varchar(50) NOT NULL DEFAULT '',
     `city name` text NOT NULL,
     `lord name` text NOT NULL,
-    `maghsad` varchar(50) NOT NULL,
-    `sendItem` varchar(50) NOT NULL,
-    `sendItemNum` varchar(50) NOT NULL,
-    `getItem` varchar(50) NOT NULL,
-    `getItemNum` varchar(50) NOT NULL
+    `maghsad` varchar(50) NOT NULL DEFAULT '',
+    `sendItem` varchar(50) NOT NULL DEFAULT '',
+    `sendItemNum` varchar(50) NOT NULL DEFAULT '0',
+    `getItem` varchar(50) NOT NULL DEFAULT '',
+    `getItemNum` varchar(50) NOT NULL DEFAULT '0'
 )");
 
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$adminsTable` (
     `id` varchar(50) NOT NULL PRIMARY KEY,
-    `step` varchar(50) NOT NULL,
-    `thing` varchar(50) NOT NULL
+    `step` varchar(50) NOT NULL DEFAULT '',
+    `thing` varchar(50) NOT NULL DEFAULT ''
 )");
 
 // جداول مربوط به شهرها
