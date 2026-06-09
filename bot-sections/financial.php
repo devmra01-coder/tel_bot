@@ -62,7 +62,7 @@ foreach ($cityCamps as $camps) {
         }
     }
 }
-if ($text == "دارایی" && $playerStep == "none") {
+if ($text == "دارایی") {
 
     bot('sendMessage', [
         'chat_id' => $chat_id,
@@ -81,7 +81,7 @@ $financialPeople
     ]);
 }
 
-if ($data == "show financial" && $playerStep == "none") {
+if ($data == "show financial") {
     bot('EditMessageText', [
         'chat_id' => $chat_id,
         'message_id' => $message_id,
