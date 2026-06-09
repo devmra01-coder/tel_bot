@@ -14,6 +14,7 @@ if (in_array($from_id, $admins)) {
 
     if ($text == "Set gap") {
         if (!$city) {
+            SendMessage($chat_id, "Done!", "HTML", $message_id);
 
             $conn->query("INSERT INTO $citiesTable (`city id`,`step`) VALUES ($chat_id,'none')");
             sendDataForDb($cityBuildingsTable, "city id", $chat_id);
@@ -27,7 +28,6 @@ if (in_array($from_id, $admins)) {
             $adminGapPeople = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM $cityPeopleTable WHERE `city id` = '{$adminsGap}' LIMIT 1"));
             $adminGapCamps = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM $cityCampsTable WHERE `city id` = '{$adminsGap}' LIMIT 1"));
             
-            SendMessage($chat_id, "Done!", "HTML", $message_id);
             foreach ($adminGapItems as $key => $value) {
                 if ($key != "city id") {
                     $conn->query("UPDATE `$cityItemsTable` SET `{$key}`='{$value}' WHERE `city id`='{$chat_id}'LIMIT 1");
