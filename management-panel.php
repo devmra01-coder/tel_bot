@@ -16,7 +16,7 @@ if (in_array($from_id, $admins)) {
         if (!$city) {
             SendMessage($chat_id, "Done!", "HTML", $message_id);
 
-            $conn->query("INSERT INTO `$citiesTable` (`city id`,`step`) VALUES ($chat_id,'none')");
+            $conn->query("INSERT IGNORE INTO `$citiesTable` (`city id`,`step`) VALUES ($chat_id,'none')");
             sendDataForDb($cityBuildingsTable, "city id", $chat_id);
             sendDataForDb($cityItemsTable, "city id", $chat_id);
             sendDataForDb($citySoldiersTable, "city id", $chat_id);
