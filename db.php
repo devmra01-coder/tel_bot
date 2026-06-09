@@ -11,23 +11,23 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$itemsTable` (
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$soldiersTable` (
     `persian name` varchar(100) NOT NULL DEFAULT '',
     `english name` varchar(50) NOT NULL PRIMARY KEY,
-    `consumable item` TEXT NOT NULL,
+    `consumable item` TEXT NOT NULL DEFAULT '',
     `first number` varchar(60) NOT NULL DEFAULT '0'
 )");
 
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$peopleTable` (
     `persian name` varchar(100) NOT NULL DEFAULT '',
     `english name` varchar(50) NOT NULL PRIMARY KEY,
-    `consumable item` TEXT NOT NULL,
+    `consumable item` VARCHAR(500) NOT NULL DEFAULT '',
     `first number` varchar(60) NOT NULL DEFAULT '0'
 )");
 
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$buildingsTable` (
     `persian name` varchar(100) NOT NULL DEFAULT '',
     `english name` varchar(50) NOT NULL PRIMARY KEY,
-    `upgrade items numbers 1` TEXT NOT NULL,
-    `upgrade items numbers 2` TEXT NOT NULL,
-    `upgrade items numbers 3` TEXT NOT NULL,
+    `upgrade items numbers 1` VARCHAR(500) NOT NULL DEFAULT '',
+    `upgrade items numbers 2` VARCHAR(500) NOT NULL DEFAULT '',
+    `upgrade items numbers 3` VARCHAR(500) NOT NULL DEFAULT '',
     `efficiency item` varchar(60) NOT NULL DEFAULT '',
     `efficiency number` varchar(60) NOT NULL DEFAULT '0',
     `first level` varchar(60) NOT NULL DEFAULT '1',
@@ -37,9 +37,9 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$buildingsTable` (
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$campsTable` (
     `persian name` varchar(100) NOT NULL DEFAULT '',
     `english name` varchar(50) NOT NULL PRIMARY KEY,
-    `upgrade items numbers 1` TEXT NOT NULL,
-    `upgrade items numbers 2` TEXT NOT NULL,
-    `upgrade items numbers 3` TEXT NOT NULL,
+    `upgrade items numbers 1` VARCHAR(500) NOT NULL DEFAULT '',
+    `upgrade items numbers 2` VARCHAR(500) NOT NULL DEFAULT '',
+    `upgrade items numbers 3` VARCHAR(500) NOT NULL DEFAULT '',
     `efficiency soldier` varchar(60) NOT NULL DEFAULT '',
     `efficiency number` varchar(60) NOT NULL DEFAULT '0',
     `first level` varchar(60) NOT NULL DEFAULT '1',
@@ -52,8 +52,8 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$citiesTable` (
     `step` varchar(50) NOT NULL DEFAULT '',
     `Check` varchar(50) NOT NULL DEFAULT '',
     `family` varchar(50) NOT NULL DEFAULT '',
-    `city name` text NOT NULL DEFAULT '',
-    `lord name` text NOT NULL DEFAULT '',
+    `city name` VARCHAR(500) NOT NULL DEFAULT '',
+    `lord name` VARCHAR(500) NOT NULL DEFAULT '',
     `maghsad` varchar(50) NOT NULL DEFAULT '',
     `sendItem` varchar(50) NOT NULL DEFAULT '',
     `sendItemNum` varchar(50) NOT NULL DEFAULT '0',
