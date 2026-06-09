@@ -36,7 +36,7 @@ if ($conn->connect_error) {
 
 // ۲. تست ثبت اطلاعات (یک INSERT ساده برای تست)
 $test_id = "123456789"; 
-$sql_test = "INSERT INTO `$adminsTable` (`id`) VALUES ('$test_id')";
+$sql_test = "INSERT INTO `TASMD-admins` (`id`) VALUES ('$test_id')";
 
 if ($conn->query($sql_test) === TRUE) {
     echo "اطلاعات با موفقیت در دیتابیس ثبت شد!";
