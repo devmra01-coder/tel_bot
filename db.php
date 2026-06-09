@@ -11,7 +11,7 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$itemsTable` (
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `$soldiersTable` (
     `persian name` varchar(100) NOT NULL DEFAULT '',
     `english name` varchar(50) NOT NULL PRIMARY KEY,
-    `consumable item` TEXT NOT NULL DEFAULT '',
+    `consumable item` VARCHAR(500) NOT NULL DEFAULT '',
     `first number` varchar(60) NOT NULL DEFAULT '0'
 )");
 
