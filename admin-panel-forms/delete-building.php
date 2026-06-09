@@ -23,14 +23,15 @@ else if ($theAdminStep == "delete-building") {
         $building = mysqli_fetch_assoc($result);
 
         if (!$building) {
+            $theAdminStep = 'none';
             bot('sendMessage', [
                 'chat_id' => $chat_id,
                 'text' => "❌ ساختمانی با این نام یافت نشد. دوباره تلاش کنید یا 🔙 را بزنید.",
             ]);
-            $theAdminStep = 'none';
         } else {
             // حذف ساختمان از جداول
             $buildingName = $building['english name'];
+            $theAdminStep = 'none';
             
             // جلوگیری از خطای سینتکس با استفاده از بک‌تیک
             $conn->query("DELETE FROM `$buildingsTable` WHERE `english name` = '{$conn->real_escape_string($buildingName)}'");
@@ -45,7 +46,6 @@ else if ($theAdminStep == "delete-building") {
                 'reply_markup' => $mainMenu,
             ]);
             
-            $theAdminStep = 'none';
         }
     }
 }
