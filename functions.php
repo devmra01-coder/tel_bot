@@ -45,7 +45,7 @@ function UpdataDataForDb($table, $key, $value, $whereKey, $whereValue)
 //----------
 function upgradeKeyboard($conn, $chat_id, $cityBuildingsTable, $buildingsTable, $cityCampsTable, $campsTable)
 {
-    $cityBuildings = mysqli_query($conn, "SELECT *, NULL AS `city id` FROM `$cityBuildingsTable` WHERE `city id` = {$chat_id}");
+    $cityBuildings =$conn->query( "SELECT *, NULL AS `city id` FROM `$cityBuildingsTable` WHERE `city id` = {$chat_id}");
     $btns = [[]];
 
     foreach ($cityBuildings as $buildings) {
@@ -69,7 +69,7 @@ function upgradeKeyboard($conn, $chat_id, $cityBuildingsTable, $buildingsTable, 
             }
         }
     }
-    $cityCamps = mysqli_query($conn, "SELECT *, NULL AS `city id` FROM `$cityCampsTable` WHERE `city id` = {$chat_id}");
+    $cityCamps =$conn->query( "SELECT *, NULL AS `city id` FROM `$cityCampsTable` WHERE `city id` = {$chat_id}");
     foreach ($cityCamps as $camps) {
         foreach ($camps as $camp) {
             $camp = explode('@', $camp);
@@ -100,7 +100,7 @@ $upgradeKeyboard = upgradeKeyboard($conn, $chat_id, $cityBuildingsTable, $buildi
 //----------------tradingInlineButton------------------------
 function tradingInlineButton($conn, $citiesTable, $chat_id)
 {
-    $user = mysqli_query($conn, "SELECT * FROM `{$citiesTable}` WHERE  `city id` !={$chat_id}");
+    $user =$conn->query( "SELECT * FROM `{$citiesTable}` WHERE  `city id` !={$chat_id}");
     $btns = [[]];
     foreach ($user as $value) {
         $a = ['text' => $value["city name"], 'callback_data' => $value["city id"]];
@@ -121,7 +121,7 @@ function tradingInlineButton($conn, $citiesTable, $chat_id)
 //---------- tradingKeyboard ----------
 function tradingKeyboard($conn, $itemsTable, $peopleTable, $soldiersTable)
 {
-    $items = mysqli_query($conn, "SELECT * FROM `$itemsTable`");
+    $items =$conn->query( "SELECT * FROM `$itemsTable`");
     $btns = [[]];
 
     foreach ($items as $item) {
@@ -137,7 +137,7 @@ function tradingKeyboard($conn, $itemsTable, $peopleTable, $soldiersTable)
             }
         }
     }
-    $People = mysqli_query($conn, "SELECT * FROM `$peopleTable`");
+    $People =$conn->query( "SELECT * FROM `$peopleTable`");
     foreach ($People as $person) {
         $a = ['text' => $person["persian name"], 'callback_data' => $person["english name"]];
         $bc = count($btns);
@@ -152,7 +152,7 @@ function tradingKeyboard($conn, $itemsTable, $peopleTable, $soldiersTable)
         }
     }
 
-    $soldiers = mysqli_query($conn, "SELECT * FROM `$soldiersTable`");
+    $soldiers =$conn->query( "SELECT * FROM `$soldiersTable`");
     foreach ($soldiers as $soldier) {
         $a = ['text' => $soldier["persian name"], 'callback_data' => $soldier["english name"]];
         $bc = count($btns);
