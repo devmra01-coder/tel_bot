@@ -52,7 +52,7 @@ function upgradeKeyboard($conn, $chat_id, $cityBuildingsTable, $buildingsTable, 
         foreach ($buildings as $building) {
             $building = explode('@', $building);
             $a = $building[0];
-            $theBuilding = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$buildingsTable` WHERE `persian name` = '{$a}' LIMIT 1"));
+            $theBuilding = mysqli_fetch_assoc($conn->query( "SELECT * FROM `$buildingsTable` WHERE `persian name` = '{$a}' LIMIT 1"));
             if ($building[1] < $theBuilding["last level"]) {
                 $a = ['text' => $building[0], 'callback_data' => $building[0]];
                 $bc = count($btns);
@@ -74,7 +74,7 @@ function upgradeKeyboard($conn, $chat_id, $cityBuildingsTable, $buildingsTable, 
         foreach ($camps as $camp) {
             $camp = explode('@', $camp);
             $a = $camp[0];
-            $theCamp = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$campsTable` WHERE `persian name` = '{$a}' LIMIT 1"));
+            $theCamp = mysqli_fetch_assoc( "SELECT * FROM `$campsTable` WHERE `persian name` = '{$a}' LIMIT 1"));
             if ($camp[1] < $theCamp["last level"]) {
                 $a = ['text' => $camp[0], 'callback_data' => $camp[0]];
                 $bc = count($btns);
@@ -183,27 +183,27 @@ function tradingFunction($conn, $cityItemsTable, $cityPeopleTable, $citySoldiers
     $theTable_4 = "";
     $user_4 = [];
     //-----Sender-----
-    $senderUser = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityItemsTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
-    $senderUserPeople = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityPeopleTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
-    $senderUserSoldiers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$citySoldiersTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
+    $senderUser = mysqli_fetch_assoc( "SELECT * FROM `{$cityItemsTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
+    $senderUserPeople = mysqli_fetch_assoc( "SELECT * FROM `{$cityPeopleTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
+    $senderUserSoldiers = mysqli_fetch_assoc( "SELECT * FROM `{$citySoldiersTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
     //-----Genter-----
-    $getterUser = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityItemsTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
-    $getterUserPeople = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityPeopleTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
-    $getterUserSoldiers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$citySoldiersTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
+    $getterUser = mysqli_fetch_assoc( "SELECT * FROM `{$cityItemsTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
+    $getterUserPeople = mysqli_fetch_assoc( "SELECT * FROM `{$cityPeopleTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
+    $getterUserSoldiers = mysqli_fetch_assoc( "SELECT * FROM `{$citySoldiersTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
     //----item_1-----
-    $checkItem =  mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityItemsTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
+    $checkItem =  mysqli_fetch_assoc( "SELECT * FROM `{$cityItemsTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
     $checkItem = $checkItem[$item_1];
-    $checkPeople =  mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityPeopleTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
+    $checkPeople =  mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$cityPeopleTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
     $checkPeople = $checkPeople[$item_1];
-    $checkSoldiers =  mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$citySoldiersTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
+    $checkSoldiers =  mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$citySoldiersTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
     $checkSoldiers = $checkSoldiers[$item_1];
  
     //----item_2-----
-    $checkItem_2 =  mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityItemsTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
+    $checkItem_2 =  mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$cityItemsTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
     $checkItem_2 = $checkItem_2[$item_2];
-    $checkPeople_2 =  mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityPeopleTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
+    $checkPeople_2 =  mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$cityPeopleTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
     $checkPeople_2 = $checkPeople_2[$item_2];
-    $checkSoldiers_2 =  mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$citySoldiersTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
+    $checkSoldiers_2 =  mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$citySoldiersTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
     $checkSoldiers_2 = $checkSoldiers_2[$item_2];
    
     if ($checkItem) {
@@ -271,9 +271,9 @@ function tradingFunction($conn, $cityItemsTable, $cityPeopleTable, $citySoldiers
 // ----------- itemsPersianNames ----------
 function itemsPersianNames($conn, $itemsTable, $peopleTable, $soldiersTable, $endglishName)
 {
-    $item = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$itemsTable}` WHERE `english name` = '{$endglishName}' LIMIT 1"));
-    $person = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$peopleTable}` WHERE `english name` = '{$endglishName}' LIMIT 1"));
-    $soldier = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$soldiersTable}` WHERE `english name` = '{$endglishName}' LIMIT 1"));
+    $item = mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$itemsTable}` WHERE `english name` = '{$endglishName}' LIMIT 1"));
+    $person = mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$peopleTable}` WHERE `english name` = '{$endglishName}' LIMIT 1"));
+    $soldier = mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$soldiersTable}` WHERE `english name` = '{$endglishName}' LIMIT 1"));
     if ($item) {
         return "«" . $item["persian name"] . "»";
     } else if ($person) {
