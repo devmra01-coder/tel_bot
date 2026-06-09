@@ -28,7 +28,24 @@ $dbName = "railway";
 $port = 14319;
         
 $conn = mysqli_connect($serverName, $userName, $password, $dbName, $port);
- 
+
+// ۱. تست اتصال به دیتابیس (مطمئن شویم دیتابیس وصل است)
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
+}
+
+// ۲. تست ثبت اطلاعات (یک INSERT ساده برای تست)
+$test_id = "123456789"; 
+$sql_test = "INSERT INTO `$adminsTable` (`id`) VALUES ('$test_id')";
+
+if ($conn->query($sql_test) === TRUE) {
+    echo "اطلاعات با موفقیت در دیتابیس ثبت شد!";
+} else {
+    // این قسمت به ما می‌گوید چرا ثبت نمی‌شود
+    echo "خطا در ثبت اطلاعات: " . $conn->error;
+}
+exit; // برای اینکه ربات جلوتر نرود و فقط همین تست اجرا شود
+
 $pastName = "TASMD";
 $adminsGap = "-7761540434";
 //----------
