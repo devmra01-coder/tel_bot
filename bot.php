@@ -27,7 +27,7 @@ $password = "IRHMjKYYiWvjxEOnoStdxKHHGLdGFkzr";
 $dbName = "railway";
 $port = 14319;
         
-$this->conn = mysqli_connect($serverName, $userName, $password, $dbName, $port);
+$conn = mysqli_connect($serverName, $userName, $password, $dbName, $port);
  
 $pastName = "TASMD";
 $adminsGap = "-7761540434";
