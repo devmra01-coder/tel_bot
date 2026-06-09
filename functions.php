@@ -45,14 +45,14 @@ function UpdataDataForDb($table, $key, $value, $whereKey, $whereValue)
 //----------
 function upgradeKeyboard($conn, $chat_id, $cityBuildingsTable, $buildingsTable, $cityCampsTable, $campsTable)
 {
-    $cityBuildings =$conn->query( "SELECT *, NULL AS \"city id\" FROM `$cityBuildingsTable` WHERE \"city id\" = {$chat_id}");
+    $cityBuildings = mysqli_query($conn, "SELECT *, NULL AS `city id` FROM `$cityBuildingsTable` WHERE `city id` = {$chat_id}");
     $btns = [[]];
 
     foreach ($cityBuildings as $buildings) {
         foreach ($buildings as $building) {
             $building = explode('@', $building);
             $a = $building[0];
-            $theBuilding = mysqli_fetch_assoc($conn->query( "SELECT * FROM `$buildingsTable` WHERE \"persian name\" = '{$a}' LIMIT 1"));
+            $theBuilding = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$buildingsTable` WHERE `persian name` = '{$a}' LIMIT 1"));
             if ($building[1] < $theBuilding["last level"]) {
                 $a = ['text' => $building[0], 'callback_data' => $building[0]];
                 $bc = count($btns);
@@ -69,12 +69,12 @@ function upgradeKeyboard($conn, $chat_id, $cityBuildingsTable, $buildingsTable, 
             }
         }
     }
-    $cityCamps =$conn->query( "SELECT *, NULL AS \"city id\" FROM `$cityCampsTable` WHERE \"city id\" = {$chat_id}");
+    $cityCamps = mysqli_query($conn, "SELECT *, NULL AS `city id` FROM `$cityCampsTable` WHERE `city id` = {$chat_id}");
     foreach ($cityCamps as $camps) {
         foreach ($camps as $camp) {
             $camp = explode('@', $camp);
             $a = $camp[0];
-            $theCamp = mysqli_fetch_assoc( "SELECT * FROM `$campsTable` WHERE \"persian name\" = '{$a}' LIMIT 1"));
+            $theCamp = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$campsTable` WHERE `persian name` = '{$a}' LIMIT 1"));
             if ($camp[1] < $theCamp["last level"]) {
                 $a = ['text' => $camp[0], 'callback_data' => $camp[0]];
                 $bc = count($btns);
@@ -100,7 +100,7 @@ $upgradeKeyboard = upgradeKeyboard($conn, $chat_id, $cityBuildingsTable, $buildi
 //----------------tradingInlineButton------------------------
 function tradingInlineButton($conn, $citiesTable, $chat_id)
 {
-    $user =$conn->query( "SELECT * FROM `{$citiesTable}` WHERE  \"city id\" !={$chat_id}");
+    $user = mysqli_query($conn, "SELECT * FROM `{$citiesTable}` WHERE  `city id` !={$chat_id}");
     $btns = [[]];
     foreach ($user as $value) {
         $a = ['text' => $value["city name"], 'callback_data' => $value["city id"]];
@@ -121,7 +121,7 @@ function tradingInlineButton($conn, $citiesTable, $chat_id)
 //---------- tradingKeyboard ----------
 function tradingKeyboard($conn, $itemsTable, $peopleTable, $soldiersTable)
 {
-    $items =$conn->query( "SELECT * FROM `$itemsTable`");
+    $items = mysqli_query($conn, "SELECT * FROM `$itemsTable`");
     $btns = [[]];
 
     foreach ($items as $item) {
@@ -137,7 +137,7 @@ function tradingKeyboard($conn, $itemsTable, $peopleTable, $soldiersTable)
             }
         }
     }
-    $People =$conn->query( "SELECT * FROM `$peopleTable`");
+    $People = mysqli_query($conn, "SELECT * FROM `$peopleTable`");
     foreach ($People as $person) {
         $a = ['text' => $person["persian name"], 'callback_data' => $person["english name"]];
         $bc = count($btns);
@@ -152,7 +152,7 @@ function tradingKeyboard($conn, $itemsTable, $peopleTable, $soldiersTable)
         }
     }
 
-    $soldiers =$conn->query( "SELECT * FROM `$soldiersTable`");
+    $soldiers = mysqli_query($conn, "SELECT * FROM `$soldiersTable`");
     foreach ($soldiers as $soldier) {
         $a = ['text' => $soldier["persian name"], 'callback_data' => $soldier["english name"]];
         $bc = count($btns);
@@ -183,27 +183,27 @@ function tradingFunction($conn, $cityItemsTable, $cityPeopleTable, $citySoldiers
     $theTable_4 = "";
     $user_4 = [];
     //-----Sender-----
-    $senderUser = mysqli_fetch_assoc( "SELECT * FROM `{$cityItemsTable}` WHERE \"city id\" = '{$sender}' LIMIT 1"));
-    $senderUserPeople = mysqli_fetch_assoc( "SELECT * FROM `{$cityPeopleTable}` WHERE \"city id\" = '{$sender}' LIMIT 1"));
-    $senderUserSoldiers = mysqli_fetch_assoc( "SELECT * FROM `{$citySoldiersTable}` WHERE \"city id\" = '{$sender}' LIMIT 1"));
+    $senderUser = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityItemsTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
+    $senderUserPeople = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityPeopleTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
+    $senderUserSoldiers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$citySoldiersTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
     //-----Genter-----
-    $getterUser = mysqli_fetch_assoc( "SELECT * FROM `{$cityItemsTable}` WHERE \"city id\" = '{$getter}' LIMIT 1"));
-    $getterUserPeople = mysqli_fetch_assoc( "SELECT * FROM `{$cityPeopleTable}` WHERE \"city id\" = '{$getter}' LIMIT 1"));
-    $getterUserSoldiers = mysqli_fetch_assoc( "SELECT * FROM `{$citySoldiersTable}` WHERE \"city id\" = '{$getter}' LIMIT 1"));
+    $getterUser = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityItemsTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
+    $getterUserPeople = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityPeopleTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
+    $getterUserSoldiers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$citySoldiersTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
     //----item_1-----
-    $checkItem =  mysqli_fetch_assoc( "SELECT * FROM `{$cityItemsTable}` WHERE \"city id\" = '{$sender}' LIMIT 1"));
+    $checkItem =  mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityItemsTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
     $checkItem = $checkItem[$item_1];
-    $checkPeople =  mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$cityPeopleTable}` WHERE \"city id\" = '{$sender}' LIMIT 1"));
+    $checkPeople =  mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityPeopleTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
     $checkPeople = $checkPeople[$item_1];
-    $checkSoldiers =  mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$citySoldiersTable}` WHERE \"city id\" = '{$sender}' LIMIT 1"));
+    $checkSoldiers =  mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$citySoldiersTable}` WHERE `city id` = '{$sender}' LIMIT 1"));
     $checkSoldiers = $checkSoldiers[$item_1];
  
     //----item_2-----
-    $checkItem_2 =  mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$cityItemsTable}` WHERE \"city id\" = '{$getter}' LIMIT 1"));
+    $checkItem_2 =  mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityItemsTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
     $checkItem_2 = $checkItem_2[$item_2];
-    $checkPeople_2 =  mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$cityPeopleTable}` WHERE \"city id\" = '{$getter}' LIMIT 1"));
+    $checkPeople_2 =  mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$cityPeopleTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
     $checkPeople_2 = $checkPeople_2[$item_2];
-    $checkSoldiers_2 =  mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$citySoldiersTable}` WHERE \"city id\" = '{$getter}' LIMIT 1"));
+    $checkSoldiers_2 =  mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$citySoldiersTable}` WHERE `city id` = '{$getter}' LIMIT 1"));
     $checkSoldiers_2 = $checkSoldiers_2[$item_2];
    
     if ($checkItem) {
@@ -251,8 +251,8 @@ function tradingFunction($conn, $cityItemsTable, $cityPeopleTable, $citySoldiers
     $mItemNum = intval($mItem[1]) - intval($num_1);
     $persianName = $mItem[0];
     $save_2 = "$persianName@$mItemNum";
-    $conn->query("UPDATE `{$theTable_1}` SET `{$item_1}`='{$save_2}' WHERE \"city id\"='{$sender}' LIMIT 1");
-    $conn->query("UPDATE `{$theTable_2}` SET `{$item_2}`='{$save_1}' WHERE \"city id\"='{$sender}' LIMIT 1");
+    $conn->query("UPDATE `{$theTable_1}` SET `{$item_1}`='{$save_2}' WHERE `city id`='{$sender}' LIMIT 1");
+    $conn->query("UPDATE `{$theTable_2}` SET `{$item_2}`='{$save_1}' WHERE `city id`='{$sender}' LIMIT 1");
     //----------
     //تغییرات دارایی دریافت کننده
     $pItem = $user_4[$item_2];
@@ -265,15 +265,15 @@ function tradingFunction($conn, $cityItemsTable, $cityPeopleTable, $citySoldiers
     $mItemNum = intval($mItem[1]) + intval($num_1);
     $persianName = $mItem[0];
     $save_2 = "$persianName@$mItemNum";
-    $conn->query("UPDATE `{$theTable_3}` SET `{$item_1}`='{$save_2}' WHERE \"city id\"='{$getter}' LIMIT 1");
-    $conn->query("UPDATE `{$theTable_4}` SET `{$item_2}`='{$save_1}' WHERE \"city id\"='{$getter}' LIMIT 1");
+    $conn->query("UPDATE `{$theTable_3}` SET `{$item_1}`='{$save_2}' WHERE `city id`='{$getter}' LIMIT 1");
+    $conn->query("UPDATE `{$theTable_4}` SET `{$item_2}`='{$save_1}' WHERE `city id`='{$getter}' LIMIT 1");
 }
 // ----------- itemsPersianNames ----------
 function itemsPersianNames($conn, $itemsTable, $peopleTable, $soldiersTable, $endglishName)
 {
-    $item = mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$itemsTable}` WHERE \"english name\" = '{$endglishName}' LIMIT 1"));
-    $person = mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$peopleTable}` WHERE \"english name\" = '{$endglishName}' LIMIT 1"));
-    $soldier = mysqli_fetch_assoc($conn->query( "SELECT * FROM `{$soldiersTable}` WHERE \"english name\" = '{$endglishName}' LIMIT 1"));
+    $item = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$itemsTable}` WHERE `english name` = '{$endglishName}' LIMIT 1"));
+    $person = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$peopleTable}` WHERE `english name` = '{$endglishName}' LIMIT 1"));
+    $soldier = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$soldiersTable}` WHERE `english name` = '{$endglishName}' LIMIT 1"));
     if ($item) {
         return "«" . $item["persian name"] . "»";
     } else if ($person) {
