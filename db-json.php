@@ -53,11 +53,11 @@ class JSONDatabase
             'camps' => [],
             'cities' => [],
             'admins' => [],
-            'cityItems' => {},
-            'cityBuildings' => {},
-            'citySoldiers' => {},
-            'cityPeople' => {},
-            'cityCamps' => {}
+            'cityItems' => [],
+            'cityBuildings' => [],
+            'citySoldiers' => [],
+            'cityPeople' => [],
+            'cityCamps' => []
         ];
     }
 
