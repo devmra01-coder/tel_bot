@@ -81,11 +81,8 @@ try {
     $conn->exec("CREATE TABLE IF NOT EXISTS $citiesTable (
         \"city id\" varchar(50) NOT NULL PRIMARY KEY,
         \"player id\" varchar(50) NOT NULL,
-        -- خط زیر اصلاح شده است: بک‌تیک (`) به دابل کوتیشن (") تبدیل شد
         \"step\" varchar(50) NOT NULL,
-        -- خط زیر اصلاح شده است: بک‌تیک (`) به دابل کوتیشن (") تبدیل شد
         \"Check\" varchar(50) NOT NULL,
-        -- خط زیر اصلاح شده است: بک‌تیک (`) به دابل کوتیشن (") تبدیل شد
         \"family\" varchar(50) NOT NULL,
         \"city name\" text NOT NULL,
         \"lord name\" text NOT NULL,
