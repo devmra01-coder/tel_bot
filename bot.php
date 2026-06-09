@@ -69,9 +69,6 @@ if ($conn->multi_query($sql)) {
 } else {
     echo "خطا در حذف جداول: " . $conn->error;
 }
-?>
-
-
 
 //----------important files-------------
 include './telegram.php';
