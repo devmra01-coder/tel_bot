@@ -13,6 +13,7 @@ else if ($theAdminStep == "delete-building") {
     
     // اگر دکمه برگشت زده شد، مرحله را ریست کن
     if ($text == "🔙") {
+        $theAdminStep = 'none';
         $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
         bot('sendMessage', ['chat_id' => $chat_id, 'text' => "عملیات لغو شد.", 'reply_markup' => $mainMenu]);
     } 
@@ -26,6 +27,7 @@ else if ($theAdminStep == "delete-building") {
                 'chat_id' => $chat_id,
                 'text' => "❌ ساختمانی با این نام یافت نشد. دوباره تلاش کنید یا 🔙 را بزنید.",
             ]);
+            $theAdminStep = 'none';
         } else {
             // حذف ساختمان از جداول
             $buildingName = $building['english name'];
@@ -42,6 +44,8 @@ else if ($theAdminStep == "delete-building") {
                 'text' => "✅ ساختمان با موفقیت حذف شد.",
                 'reply_markup' => $mainMenu,
             ]);
+            
+            $theAdminStep = 'none';
         }
     }
 }
