@@ -16,17 +16,17 @@ if (in_array($from_id, $admins)) {
         if (!$city) {
             SendMessage($chat_id, "Done!", "HTML", $message_id);
 
-            $conn->query("INSERT INTO $citiesTable (`city id`,`step`) VALUES ($chat_id,'none')");
+            $conn->query("INSERT INTO `$citiesTable` (`city id`,`step`) VALUES ($chat_id,'none')");
             sendDataForDb($cityBuildingsTable, "city id", $chat_id);
             sendDataForDb($cityItemsTable, "city id", $chat_id);
             sendDataForDb($citySoldiersTable, "city id", $chat_id);
             sendDataForDb($cityPeopleTable, "city id", $chat_id);
             sendDataForDb($cityCampsTable, "city id", $chat_id);
-            $adminGapItems = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM $cityItemsTable WHERE `city id` = '{$adminsGap}' LIMIT 1"));
-            $adminGapBuildings = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM $cityBuildingsTable WHERE `city id` = '{$adminsGap}' LIMIT 1"));
-            $adminGapSoldiers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM $citySoldiersTable WHERE `city id` = '{$adminsGap}' LIMIT 1"));
-            $adminGapPeople = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM $cityPeopleTable WHERE `city id` = '{$adminsGap}' LIMIT 1"));
-            $adminGapCamps = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM $cityCampsTable WHERE `city id` = '{$adminsGap}' LIMIT 1"));
+            $adminGapItems = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$cityItemsTable` WHERE `city id` = '{$adminsGap}' LIMIT 1"));
+            $adminGapBuildings = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$cityBuildingsTable` WHERE `city id` = '{$adminsGap}' LIMIT 1"));
+            $adminGapSoldiers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$citySoldiersTable` WHERE `city id` = '{$adminsGap}' LIMIT 1"));
+            $adminGapPeople = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$cityPeopleTable` WHERE `city id` = '{$adminsGap}' LIMIT 1"));
+            $adminGapCamps = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$cityCampsTable` WHERE `city id` = '{$adminsGap}' LIMIT 1"));
             
             foreach ($adminGapItems as $key => $value) {
                 if ($key != "city id") {
