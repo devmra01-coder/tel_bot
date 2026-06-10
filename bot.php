@@ -47,10 +47,12 @@ $citySoldiersTable = "$pastName-citySoldiers";
 $cityPeopleTable = "$pastName-cityPeople";
 $cityCampsTable = "$pastName-cityCamps";
 
-//----------important files-------------
-include './telegram.php';
 include './db.php';
 include './functions.php';
+
+    sendDataForDb($buildingsTable,  "english name", 'gfdgerg');
+//----------important files-------------
+include './telegram.php';
 include './keyboards.php';
 //---------------------------
 
@@ -68,7 +70,6 @@ if ($tc == "private") {
 
 
 
-    sendDataForDb($buildingsTable,  "english name", 'gfdgerg');
 //----------get-id-----------
 if ($text == "/id") {
     bot('sendMessage', [
