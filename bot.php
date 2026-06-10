@@ -47,7 +47,7 @@ $citySoldiersTable = "$pastName-citySoldiers";
 $cityPeopleTable = "$pastName-cityPeople";
 $cityCampsTable = "$pastName-cityCamps";
 
- $conn->query("INSERT INTO `{$buildingsTable}` (`english name`) VALUES ('gfdgerg')");
+ // $conn->query("INSERT INTO `{$buildingsTable}` (`english name`) VALUES ('gfdgerg')");
 //----------important files-------------
 include './db.php';
 include './functions.php';
