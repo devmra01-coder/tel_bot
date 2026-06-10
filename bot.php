@@ -47,10 +47,9 @@ $citySoldiersTable = "$pastName-citySoldiers";
 $cityPeopleTable = "$pastName-cityPeople";
 $cityCampsTable = "$pastName-cityCamps";
 
- $conn->query("DROP TABLE IF EXISTS `$buildingsTable`");
-include './db.php';
  $conn->query("INSERT INTO `{$buildingsTable}` (`english name`) VALUES ('gfdgerg')");
 //----------important files-------------
+include './db.php';
 include './functions.php';
 include './telegram.php';
 include './keyboards.php';
