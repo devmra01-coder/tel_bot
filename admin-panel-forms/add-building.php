@@ -179,7 +179,6 @@
     $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
 } else {
     if ($text == "🔙") {
-        $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
         $idm;
         switch ($theAdminStep) {
             case strpos($theAdminStep, "add-building-2-") !== false:
@@ -212,5 +211,6 @@
         }
         $conn->query("DELETE FROM `$buildingsTable` WHERE `english name` = '{$idm}'");
         $conn->query("ALTER TABLE `$cityBuildingsTable` DROP COLUMN `{$idm}`");
+        $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
     }
 }
