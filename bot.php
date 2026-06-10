@@ -49,9 +49,9 @@ $cityCampsTable = "$pastName-cityCamps";
 
  // $conn->query("INSERT INTO `{$buildingsTable}` (`english name`) VALUES ('gfdgerg')");
 //----------important files-------------
+include './telegram.php';
 include './functions.php';
 include './db.php';
-include './telegram.php';
 include './keyboards.php';
 //---------------------------
 
