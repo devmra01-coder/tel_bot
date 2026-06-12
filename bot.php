@@ -49,8 +49,8 @@ $cityCampsTable = "$pastName-cityCamps";
 
 //----------important files-------------
 include './telegram.php';
-include './functions.php';
 include './db.php';
+include './functions.php';
 include './keyboards.php';
 //---------------------------
 
