@@ -53,9 +53,10 @@ $upgradeItemsNums_1 $upgradeItemsNums_2 $upgradeItemsNums_3
     $conn->query("UPDATE `$citiesTable` SET `step`= 'upgrade-2@$text' WHERE `city id`='{$chat_id}'LIMIT 1");
 } else if (strpos($playerStep, "upgrade-2@") !== false && $stop == "No" && $text) {
     $bName = str_replace("upgrade-2@", '', $playerStep);
+    $text2 = "Yes-" + $text ;
     $inlineYesOrNo = json_encode([
         'inline_keyboard' => [
-            [['text' => "خیر", 'callback_data' => "No"], ['text' => "بله" , 'callback_data' => "Yes-" + $text]]
+            [['text' => "خیر", 'callback_data' => "No"], ['text' => "بله" , 'callback_data' => $text2]]
         ]
     ]);
     bot('EditMessageText', [
