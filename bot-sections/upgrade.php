@@ -50,7 +50,7 @@ $upgradeItemsNums_1 $upgradeItemsNums_2 $upgradeItemsNums_3
 ",
         'reply_markup' => $inlineKeyboard,
     ]);
-    $conn->query("UPDATE `$citiesTable` SET `step`= `upgrade-2@{$text}` WHERE `city id`='{$chat_id}'LIMIT 1");
+    $conn->query("UPDATE `$citiesTable` SET `step`= `upgrade-2@$text` WHERE `city id`='{$chat_id}'LIMIT 1");
 } else if (strpos($playerStep, "upgrade-2@") !== false && $stop == "No" && $text) {
     $bName = str_replace("upgrade-2@", '', $playerStep);
     $inlineYesOrNo = json_encode([
