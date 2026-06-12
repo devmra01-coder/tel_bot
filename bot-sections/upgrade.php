@@ -55,7 +55,7 @@ $upgradeItemsNums_1 $upgradeItemsNums_2 $upgradeItemsNums_3
     $bName = str_replace("upgrade-2@", '', $playerStep);
     $inlineYesOrNo = json_encode([
         'inline_keyboard' => [
-            [['text' => "خیر", 'callback_data' => "No"], ['text' => 'Yes-$text', 'callback_data' => 'Yes-$text']]
+            [['text' => "خیر", 'callback_data' => "No"], ['text' => "بله" , 'callback_data' => "Yes-" + $text]]
         ]
     ]);
     bot('EditMessageText', [
