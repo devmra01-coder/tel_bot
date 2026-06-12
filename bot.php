@@ -47,29 +47,6 @@ $citySoldiersTable = "$pastName-citySoldiers";
 $cityPeopleTable = "$pastName-cityPeople";
 $cityCampsTable = "$pastName-cityCamps";
 
-$tables = [
-    $itemsTable, 
-    $soldiersTable, 
-    $peopleTable, 
-    $buildingsTable, 
-    $campsTable, 
-    $citiesTable, 
-    $adminsTable, 
-    $cityBuildingsTable, 
-    $cityItemsTable, 
-    $citySoldiersTable, 
-    $cityPeopleTable, 
-    $cityCampsTable
-];
- 
-foreach ($tables as $table) {
-    mysqli_query($conn, "DROP TABLE IF EXISTS `$table`");
-    echo "جدول $table حذف شد.<br>";
-}
- 
-
-echo "<h3>تمام جداول با موفقیت پاک شدند.</h3>"; 
-
 //----------important files-------------
 include './telegram.php';
 include './functions.php';
