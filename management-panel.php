@@ -82,17 +82,17 @@ if (in_array($from_id, $admins)) {
         }
     }
     //---------------------------------------------------------
-    // if ($data == "Set city name") {
-    //     bot('EditMessageText', [
-    //         'chat_id' => $chat_id,
-    //         'message_id' => $message_id,
-    //         'text' => "نام شهر را وارد کنید",
-    //     ]);
-    //     $conn->query("UPDATE `$citiesTable` SET `step`='set-city-name-1' WHERE `city id`='{$chat_id}' LIMIT 1");
-    // } else if ($playerStep == "set-city-name-1" && $stop == "No") {
-    //     SendMessage($chat_id, "Done!", "HTML", $message_id);
-    //     $conn->query("UPDATE `$citiesTable` SET `step`='none', `city name`='{$text}' WHERE `city id`='{$chat_id}' LIMIT 1");
-    // }
+    if ($data == "Set city name") {
+        bot('EditMessageText', [
+            'chat_id' => $chat_id,
+            'message_id' => $message_id,
+            'text' => "نام شهر را وارد کنید",
+        ]);
+        $conn->query("UPDATE `$citiesTable` SET `step`='set-city-name-1' WHERE `city id`='{$chat_id}' LIMIT 1");
+    } else if ($playerStep == "set-city-name-1" && $stop == "No") {
+        SendMessage($chat_id, "Done!", "HTML", $message_id);
+        $conn->query("UPDATE `$citiesTable` SET `step`='none', `city name`='{$text}' WHERE `city id`='{$chat_id}' LIMIT 1");
+    }
     if ($reply && $text == "Set city name") {
         if (!$city) {
             bot('sendMessage', [
@@ -112,17 +112,17 @@ if (in_array($from_id, $admins)) {
         }
     }
     //---------------------------------------------------------
-    // if ($data == "Set lord name") {
-    //     bot('EditMessageText', [
-    //         'chat_id' => $chat_id,
-    //         'message_id' => $message_id,
-    //         'text' => "نام فرمانده را وارد کنید",
-    //     ]);
-    //     $conn->query("UPDATE `$citiesTable` SET `step`='set-lord-name-1' WHERE `city id`='{$chat_id}'LIMIT 1");
-    // } else if ($playerStep == "set-lord-name-1" && $stop == "No") {
-    //     SendMessage($chat_id, "Done!", "HTML", $message_id);
-    //     $conn->query("UPDATE `$citiesTable` SET `step`='none', `lord name`='{$text}' WHERE `city id`='{$chat_id}' LIMIT 1");
-    // }
+    if ($data == "Set lord name") {
+        bot('EditMessageText', [
+            'chat_id' => $chat_id,
+            'message_id' => $message_id,
+            'text' => "نام فرمانده را وارد کنید",
+        ]);
+        $conn->query("UPDATE `$citiesTable` SET `step`='set-lord-name-1' WHERE `city id`='{$chat_id}'LIMIT 1");
+    } else if ($playerStep == "set-lord-name-1" && $stop == "No") {
+        SendMessage($chat_id, "Done!", "HTML", $message_id);
+        $conn->query("UPDATE `$citiesTable` SET `step`='none', `lord name`='{$text}' WHERE `city id`='{$chat_id}' LIMIT 1");
+    }
     if ($reply && $text == "Set lord name") {
         if (!$city) {
             bot('sendMessage', [
