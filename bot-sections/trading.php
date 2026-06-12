@@ -1,5 +1,5 @@
 <?php
-if ($text == "trading") {
+if ($data == "trading") {
     $tradingKeyboard = json_encode([
         'inline_keyboard' => tradingInlineButton($conn, $citiesTable, $chat_id),
         'resize_keyboard' => true
