@@ -1,5 +1,5 @@
 <?php
-if ($data == "trading") {
+if ($text == "trading") {
     $tradingKeyboard = json_encode([
         'inline_keyboard' => tradingInlineButton($conn, $citiesTable, $chat_id),
         'resize_keyboard' => true
@@ -7,18 +7,18 @@ if ($data == "trading") {
     $theText = "[🏰]- قصد تجارت با کدام شهر را دارید؟";
     EditMessageText($chatId, $messageId, $theText, "HTML", $tradingKeyboard);
     $conn->query("UPDATE `$citiesTable` SET `step`='trading-1' WHERE `city id`='{$chat_id}'LIMIT 1");
-} else if ($playerStep == "trading-1" && $data && $stop == "No") {
+} else if ($playerStep == "trading-1" && $text && $stop == "No") {
     $tradingItemList = json_encode([
         'inline_keyboard' =>  tradingKeyboard($conn, $itemsTable, $peopleTable, $soldiersTable),
         'resize_keyboard' => true
     ]);
     $theText = "[📤]- چه کالایی را برای این شهر ارسال می کنید؟";
     EditMessageText($chatId, $messageId, $theText, "HTML", $tradingItemList);
-    $conn->query("UPDATE `$citiesTable` SET `step`='trading-2', `maghsad`='{$data}' WHERE `city id`='{$chat_id}'LIMIT 1");
-} else if ($playerStep == "trading-2" && $data && $stop == "No") {
+    $conn->query("UPDATE `$citiesTable` SET `step`='trading-2', `maghsad`='{$text}' WHERE `city id`='{$chat_id}'LIMIT 1");
+} else if ($playerStep == "trading-2" && $text && $stop == "No") {
     $theText = "[🧮]- چه میزان از این کالا را ارسال می کنید؟";
     EditMessageText($chatId, $messageId, $theText, "HTML", $back);
-    $conn->query("UPDATE `$citiesTable` SET `step`='trading-3', `sendItem`='{$data}' WHERE `city id`='{$chat_id}'LIMIT 1");
+    $conn->query("UPDATE `$citiesTable` SET `step`='trading-3', `sendItem`='{$text}' WHERE `city id`='{$chat_id}'LIMIT 1");
 } else if ($playerStep == "trading-3" && $stop == "No") {
     $itemNum = "";
     $cityItems = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$cityItemsTable` WHERE `city id` = '{$chat_id}' LIMIT 1"));
@@ -62,10 +62,10 @@ if ($data == "trading") {
             ]);
         }
     }
-} else if ($playerStep == "trading-4" && $data && $stop == "No") {
+} else if ($playerStep == "trading-4" && $text && $stop == "No") {
     $theText = "[⚖️]- چه مقدار از این کالا را از طرف مقابل طلب می کنید؟";
     EditMessageText($chatId, $messageId, $theText, "HTML", $back);
-    $conn->query("UPDATE `$citiesTable` SET `step`='trading-5', `getItem`='{$data}' WHERE `city id`='{$chat_id}'LIMIT 1");
+    $conn->query("UPDATE `$citiesTable` SET `step`='trading-5', `getItem`='{$text}' WHERE `city id`='{$chat_id}'LIMIT 1");
 } else if ($playerStep == "trading-5" && $stop == "No") {
     bot('sendMessage', [
         'chat_id' => $chat_id,
@@ -75,13 +75,13 @@ if ($data == "trading") {
         'reply_markup' => $inlineYesOrNo,
     ]);
     $conn->query("UPDATE `$citiesTable` SET `step`='trading-6', `getItemNum`='{$text}' WHERE `city id`='{$chat_id}'LIMIT 1");
-} else if ($playerStep == "trading-6" && $data && $stop == "No") {
+} else if ($playerStep == "trading-6" && $text && $stop == "No") {
     $tradingMaghsadCastle = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `{$citiesTable}` WHERE `city id` = '{$maghsad}' LIMIT 1"));
     $tradinMaghsad = isset($tradingMaghsadCastle['city name']) ? $tradingMaghsadCastle['city name'] : $maghsad;
     $persianSendItem = itemsPersianNames($conn, $itemsTable, $peopleTable, $soldiersTable, $sendItem);
     $persianGetItem = itemsPersianNames($conn, $itemsTable, $peopleTable, $soldiersTable, $getItem);
 
-    if ($data == "yes") {
+    if ($text == "yes") {
         bot('sendMessage', [
             'chat_id' => $maghsad,
             'text' => "
@@ -101,7 +101,7 @@ if ($data == "trading") {
             'text' => "[✔️]- درخواست تجارت شما با موفقیت به شهر $tradinMaghsad ارسال شد. منتظر پاسخ از طرف لرد این شهر باشید.",
             'parse_mode' => "HTML",
         ]);
-    } else if ($data == "no") {
+    } else if ($text == "no") {
         bot('EditMessageText', [
             'chat_id' => $chat_id,
             'message_id' => $message_id,
@@ -113,8 +113,8 @@ if ($data == "trading") {
     $conn->query("UPDATE `$citiesTable` SET `step`='none' WHERE `city id`='{$chat_id}'LIMIT 1");
 }
 //----------------------------------------
-if (strpos($data, 'send&') !== false) {
-    $soldier = str_replace('send&', '', $data);
+if (strpos($text, 'send&') !== false) {
+    $soldier = str_replace('send&', '', $text);
     $tradingArray = explode('&', $soldier);
     $PsendItem = $user[$tradingArray[0]] + $tradingArray[1];
     $MgetItem = $user[$tradingArray[2]] - $tradingArray[3];
@@ -212,8 +212,8 @@ if (strpos($data, 'send&') !== false) {
     }
 }
 
-if (strpos($data, 'NoSendding&') !== false) {
-    $idm = str_replace('send&', '', $data);
+if (strpos($text, 'NoSendding&') !== false) {
+    $idm = str_replace('send&', '', $text);
     bot('EditMessageText', [
         'chat_id' => $chat_id,
         'message_id' => $message_id,
