@@ -31,7 +31,7 @@ $conn = mysqli_connect($serverName, $userName, $password, $dbName, $port);
 
 
 $pastName = "TASMD";
-$adminsGap = "-7761540434";
+$adminsGap = "-1003919923696";
 //----------
 $adminsTable = "$pastName-admins";
 $itemsTable = "$pastName-items";
