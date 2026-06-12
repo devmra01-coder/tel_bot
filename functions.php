@@ -45,56 +45,56 @@ function UpdataDataForDb($table, $key, $value, $whereKey, $whereValue)
 //----------
 function upgradeKeyboard($conn, $chat_id, $cityBuildingsTable, $buildingsTable, $cityCampsTable, $campsTable)
 {
-    $cityBuildings = mysqli_query($conn, "SELECT *, NULL AS `city id` FROM `$cityBuildingsTable` WHERE `city id` = {$chat_id}");
     $btns = [[]];
+    $chat_id = intval($chat_id);
 
-    foreach ($cityBuildings as $buildings) {
-        foreach ($buildings as $building) {
-            $building = explode('@', $building);
-            $a = $building[0];
-            $theBuilding = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$buildingsTable` WHERE `persian name` = '{$a}' LIMIT 1"));
-            if ($building[1] < $theBuilding["last level"]) {
-                $a = ['text' => $building[0], 'callback_data' => $building[0]];
-                $bc = count($btns);
+    // تابع کمکی برای افزودن امن دکمه
+    $addBtn = function(&$btns, $text) {
+        $lastRowIndex = count($btns) - 1;
+        if (count($btns[$lastRowIndex]) >= 2) {
+            $btns[] = []; // ایجاد ردیف جدید اگر ردیف فعلی پر است
+            $lastRowIndex++;
+        }
+        $btns[$lastRowIndex][] = ['text' => $text, 'callback_data' => $text];
+    };
 
-                for ($counter = 0; $counter < $bc; $counter++) {
-                    $btnLen = count($btns[$counter]);
-                    if ($btnLen < 2) {
-                        array_push($btns[$counter], $a);
-                    }
-                    if ($btnLen == 1) {
-                        array_push($btns, []);
-                    }
+    // پردازش ساختمان‌ها و کمپ‌ها (به صورت یکپارچه)
+    $tables = [$cityBuildingsTable => $buildingsTable, $cityCampsTable => $campsTable];
+
+    foreach ($tables as $cityTable => $refTable) {
+        $result = mysqli_query($conn, "SELECT * FROM `$cityTable` WHERE `city id` = {$chat_id}");
+        if (!$result) continue;
+
+        while ($row = mysqli_fetch_assoc($result)) {
+            foreach ($row as $colName => $data) {
+                if ($colName === 'city id' || empty($data)) continue;
+
+                $parts = explode('@', $data);
+                if (count($parts) < 2) continue;
+
+                $name = $parts[0];
+                $currentLevel = intval($parts[1]);
+
+                $nameSafe = mysqli_real_escape_string($conn, $name);
+                $refQuery = mysqli_query($conn, "SELECT `last level` FROM `$refTable` WHERE `persian name` = '{$nameSafe}' LIMIT 1");
+                $refData = mysqli_fetch_assoc($refQuery);
+
+                if ($refData && $currentLevel < intval($refData['last level'])) {
+                    $addBtn($btns, $name);
                 }
             }
         }
     }
-    $cityCamps = mysqli_query($conn, "SELECT *, NULL AS `city id` FROM `$cityCampsTable` WHERE `city id` = {$chat_id}");
-    foreach ($cityCamps as $camps) {
-        foreach ($camps as $camp) {
-            $camp = explode('@', $camp);
-            $a = $camp[0];
-            $theCamp = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$campsTable` WHERE `persian name` = '{$a}' LIMIT 1"));
-            if ($camp[1] < $theCamp["last level"]) {
-                $a = ['text' => $camp[0], 'callback_data' => $camp[0]];
-                $bc = count($btns);
 
-                for ($counter = 0; $counter < $bc; $counter++) {
-                    $btnLen = count($btns[$counter]);
-                    if ($btnLen < 2) {
-                        array_push($btns[$counter], $a);
-                    }
-                    if ($btnLen == 1) {
-                        array_push($btns, []);
-                    }
-                }
-            }
-        }
-    }
-    // sort($btns);
-    array_push($btns, [['text' => "🔙", 'callback_data' => "back"]]);
+    // حذف آخرین ردیف اگر خالی مانده باشد
+    if (empty(end($btns))) array_pop($btns);
+
+    // افزودن دکمه برگشت
+    $btns[] = [['text' => "🔙", 'callback_data' => "back"]];
+    
     return $btns;
 }
+
 
 $upgradeKeyboard = upgradeKeyboard($conn, $chat_id, $cityBuildingsTable, $buildingsTable, $cityCampsTable, $campsTable);
 //----------------tradingInlineButton------------------------
