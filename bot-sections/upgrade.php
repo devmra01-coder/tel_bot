@@ -1,6 +1,6 @@
 <?php
 
-if ($data == "upgrade") {
+if ($text == "upgrade") {
     bot('EditMessageText', [
         'chat_id' => $chat_id,
         'message_id' => $message_id,
@@ -8,9 +8,9 @@ if ($data == "upgrade") {
         'reply_markup' => $upgradePanel,
     ]);
     $conn->query("UPDATE `$citiesTable` SET `step`='upgrade-1' WHERE `city id`='{$chat_id}'LIMIT 1");
-} else if ($playerStep == "upgrade-1" && $stop == "No" && $data) {
-    $buildingsTable = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$buildingsTable` WHERE `persian name` = '{$data}' LIMIT 1"));
-    $campsTable = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$campsTable` WHERE `persian name` = '{$data}' LIMIT 1"));
+} else if ($playerStep == "upgrade-1" && $stop == "No" && $text) {
+    $buildingsTable = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$buildingsTable` WHERE `persian name` = '{$text}' LIMIT 1"));
+    $campsTable = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$campsTable` WHERE `persian name` = '{$text}' LIMIT 1"));
     $upgradeItemsNums_1 = $buildingsTable ? $buildingsTable["upgrade items numbers 1"] : $campsTable["upgrade items numbers 1"];
     $upgradeItemsNums_1 = ($upgradeItemsNums_1 != "♨️ نیاز نیست") ? "\n\n[🔖]- پلن اول :\n\n $upgradeItemsNums_1" : "";
     $upgradeItemsNums_2 = $buildingsTable ? $buildingsTable["upgrade items numbers 2"] : $campsTable["upgrade items numbers 2"];
@@ -50,12 +50,12 @@ $upgradeItemsNums_1 $upgradeItemsNums_2 $upgradeItemsNums_3
 ",
         'reply_markup' => $inlineKeyboard,
     ]);
-    $conn->query("UPDATE `$citiesTable` SET `step`='upgrade-2@$data' WHERE `city id`='{$chat_id}'LIMIT 1");
-} else if (strpos($playerStep, "upgrade-2@") !== false && $stop == "No" && $data) {
+    $conn->query("UPDATE `$citiesTable` SET `step`='upgrade-2@$text' WHERE `city id`='{$chat_id}'LIMIT 1");
+} else if (strpos($playerStep, "upgrade-2@") !== false && $stop == "No" && $text) {
     $bName = str_replace("upgrade-2@", '', $playerStep);
     $inlineYesOrNo = json_encode([
         'inline_keyboard' => [
-            [['text' => "خیر", 'callback_data' => "No"], ['text' => "بله", 'callback_data' => "Yes-$data"]]
+            [['text' => "خیر", 'callback_data' => "No"], ['text' => "بله", 'callback_data' => "Yes-$text"]]
         ]
     ]);
     bot('EditMessageText', [
@@ -67,10 +67,10 @@ $upgradeItemsNums_1 $upgradeItemsNums_2 $upgradeItemsNums_3
         'reply_markup' => $inlineYesOrNo,
     ]);
     $conn->query("UPDATE `$citiesTable` SET `step`='upgrade-3@$bName' WHERE `city id`='{$chat_id}'LIMIT 1");
-} else if (strpos($playerStep, "upgrade-3@") !== false && $stop == "No" && $data) {
+} else if (strpos($playerStep, "upgrade-3@") !== false && $stop == "No" && $text) {
     $bName = str_replace("upgrade-3@", '', $playerStep);
-    if (strpos($data, "Yes-") !== false) {
-        $plan = str_replace("Yes-", '', $data);
+    if (strpos($text, "Yes-") !== false) {
+        $plan = str_replace("Yes-", '', $text);
 
         $buildingsTable = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$buildingsTable` WHERE `persian name` = '{$bName}' LIMIT 1"));
         $campsTable = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$campsTable` WHERE `persian name` = '{$bName}' LIMIT 1"));
@@ -178,7 +178,7 @@ $upgradeItemsNums_1 $upgradeItemsNums_2 $upgradeItemsNums_3
             EditMessageText($chat_id, $message_id, "Done!");
         }
     }
-    if ($data == "No") {
+    if ($text == "No") {
         EditMessageText($chat_id, $message_id, "این ارتقا لغو شد قربان!");
     }
     $conn->query("UPDATE `$citiesTable` SET `step`='none' WHERE `city id`='{$chat_id}'LIMIT 1");
