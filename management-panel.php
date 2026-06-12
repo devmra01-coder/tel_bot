@@ -123,7 +123,7 @@ if (in_array($from_id, $admins)) {
     //     SendMessage($chat_id, "Done!", "HTML", $message_id);
     //     $conn->query("UPDATE `$citiesTable` SET `step`='none', `lord name`='{$text}' WHERE `city id`='{$chat_id}' LIMIT 1");
     // }
-    if ($reply && $text == "Set city name") {
+    if ($reply && $text == "Set lord name") {
         if (!$city) {
             bot('sendMessage', [
                 'chat_id' => $chat_id,
