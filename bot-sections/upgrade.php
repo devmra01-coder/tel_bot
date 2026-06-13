@@ -69,7 +69,7 @@ $upgradeItemsNums_1 $upgradeItemsNums_2 $upgradeItemsNums_3
     $conn->query("UPDATE `$citiesTable` SET `step`='upgrade-3@$bName' WHERE `city id`='{$chat_id}'LIMIT 1");
 } else if (strpos($playerStep, "upgrade-3@") !== false && $stop == "No" && $text) {
     $bName = str_replace("upgrade-3@", '', $playerStep);
-    if (strpos($text, "Yes-") !== false) {
+    if ($text !== false) {
         $plan = $text ;
 
         $buildingsTable = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$buildingsTable` WHERE `persian name` = '{$bName}' LIMIT 1"));
