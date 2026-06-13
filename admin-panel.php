@@ -118,6 +118,7 @@ if (in_array($from_id, $admins)) {
                 'reply_to_message_id' => $message_id,
                 'reply_markup' => $adminBack,
             ]);
+            $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}'LIMIT 1");
             $conn->query("ALTER TABLE `$cityBuildingsTable` DROP COLUMN `{$idm}`");
         }
     }
