@@ -53,10 +53,9 @@ $upgradeItemsNums_1 $upgradeItemsNums_2 $upgradeItemsNums_3
     $conn->query("UPDATE `$citiesTable` SET `step`= 'upgrade-2@$text' WHERE `city id`='{$chat_id}'LIMIT 1");
 } else if (strpos($playerStep, "upgrade-2@") !== false && $stop == "No" && $text) {
     $bName = str_replace("upgrade-2@", '', $playerStep);
-    $text2 = "Yes-" . $text ;
     $inlineYesOrNo = json_encode([
         'inline_keyboard' => [
-            [['text' => "خیر", 'callback_data' => "No"], ['text' => "بله" , 'callback_data' => $text2]]
+            [['text' => "خیر", 'callback_data' => "No"], ['text' => "بله" , 'callback_data' => $text]]
         ]
     ]);
     bot('EditMessageText', [
@@ -71,7 +70,7 @@ $upgradeItemsNums_1 $upgradeItemsNums_2 $upgradeItemsNums_3
 } else if (strpos($playerStep, "upgrade-3@") !== false && $stop == "No" && $text) {
     $bName = str_replace("upgrade-3@", '', $playerStep);
     if (strpos($text, "Yes-") !== false) {
-        $plan = str_replace("Yes-", '', $text);
+        $plan = $text ;
 
         $buildingsTable = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$buildingsTable` WHERE `persian name` = '{$bName}' LIMIT 1"));
         $campsTable = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$campsTable` WHERE `persian name` = '{$bName}' LIMIT 1"));
