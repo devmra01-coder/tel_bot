@@ -46,58 +46,23 @@ if (in_array($from_id, $admins)) {
         $conn->query("UPDATE `$adminsTable` SET `step`='delete-all' WHERE `id`='{$from_id}'LIMIT 1");
     } else if ($theAdminStep == "delete-all") {
         if ($text == "✅") {
-            $conn->query("DELETE FROM `$itemsTable`");
-            $conn->query("DELETE FROM `$peopleTable`");
-            $conn->query("DELETE FROM `$buildingsTable`");
-            $conn->query("DELETE FROM `$soldiersTable`");
-            $conn->query("DELETE FROM `$campsTable`");
-            $conn->query("DELETE FROM `$citiesTable` WHERE `city id` != '-1002243456561'");
-            //--------------------------------------
-            $cityItems = mysqli_query($conn, "SELECT * FROM `$cityItemsTable`");
-            $cityBuildings = mysqli_query($conn, "SELECT * FROM `$cityBuildingsTable`");
-            $citySoldiers = mysqli_query($conn, "SELECT * FROM `$citySoldiersTable`");
-            $cityPeople = mysqli_query($conn, "SELECT * FROM `$cityPeopleTable`");
-            $cityCamps = mysqli_query($conn, "SELECT * FROM `$cityCampsTable`");
-            $conn->query("DELETE FROM `$cityItemsTable` WHERE `city id` != '-1002243456561'");
-            $conn->query("DELETE FROM `$cityBuildingsTable` WHERE `city id` != '-1002243456561'");
-            $conn->query("DELETE FROM `$citySoldiersTable` WHERE `city id` != '-1002243456561'");
-            $conn->query("DELETE FROM `$cityPeopleTable` WHERE `city id` != '-1002243456561'");
-            $conn->query("DELETE FROM `$cityCampsTable` WHERE `city id` != '-1002243456561'");
-
-            foreach ($cityItems as $values) {
-                foreach ($values as $key => $value) {
-                    if ($key != "city id") {
-                        $conn->query("ALTER TABLE `$cityItemsTable` DROP COLUMN `{$key}`");
-                    }
-                }
-            }
-            foreach ($cityBuildings as $values) {
-                foreach ($values as $key => $value) {
-                    if ($key != "city id") {
-                        $conn->query("ALTER TABLE `$cityBuildingsTable` DROP COLUMN `{$key}`");
-                    }
-                }
-            }
-            foreach ($citySoldiers as $values) {
-                foreach ($values as $key => $value) {
-                    if ($key != "city id") {
-                        $conn->query("ALTER TABLE `$citySoldiersTable` DROP COLUMN `{$key}`");
-                    }
-                }
-            }
-            foreach ($cityPeople as $values) {
-                foreach ($values as $key => $value) {
-                    if ($key != "city id") {
-                        $conn->query("ALTER TABLE `$cityPeopleTable` DROP COLUMN `{$key}`");
-                    }
-                }
-            }
-            foreach ($cityCamps as $values) {
-                foreach ($values as $key => $value) {
-                    if ($key != "city id") {
-                        $conn->query("ALTER TABLE `$cityCampsTable` DROP COLUMN `{$key}`");
-                    }
-                }
+            $tables = [
+                $itemsTable, 
+                $soldiersTable, 
+                $peopleTable, 
+                $buildingsTable, 
+                $campsTable, 
+                $citiesTable, 
+                $adminsTable, 
+                $cityBuildingsTable, 
+                $cityItemsTable, 
+                $citySoldiersTable, 
+                $cityPeopleTable, 
+                $cityCampsTable
+            ];
+            
+            foreach ($tables as $table) {
+                $sql = "DROP TABLE IF EXISTS `$table`";
             }
 
             bot('sendMessage', [
