@@ -69,115 +69,101 @@ $upgradeItemsNums_1 $upgradeItemsNums_2 $upgradeItemsNums_3
     $conn->query("UPDATE `$citiesTable` SET `step`='upgrade-3@$bName' WHERE `city id`='{$chat_id}'LIMIT 1");
 } else if (strpos($playerStep, "upgrade-3@") !== false && $stop == "No" && $text) {
     $bName = str_replace("upgrade-3@", '', $playerStep);
-    if ($text !== false) {
-        $plan = $text ;
+    $plan = $text;
 
-        $buildingsTable = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$buildingsTable` WHERE `persian name` = '{$bName}' LIMIT 1"));
-        $campsTable = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$campsTable` WHERE `persian name` = '{$bName}' LIMIT 1"));
-        $nums = "";
-        switch ($plan) {
-            case 'plan-1':
-                $nums = $buildingsTable ? $buildingsTable["upgrade items numbers 1"] : $campsTable["upgrade items numbers 1"];
+    // 1. تشخیص اینکه با ساختمان روبرو هستیم یا کمپ (فقط یکبار کوئری می‌زنیم)
+    $buildingData = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$buildingsTable` WHERE `persian name` = '{$bName}' LIMIT 1"));
+    $campData = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$campsTable` WHERE `persian name` = '{$bName}' LIMIT 1"));
 
-                break;
-            case 'plan-2':
-                $nums = $buildingsTable ? $buildingsTable["upgrade items numbers 2"] : $campsTable["upgrade items numbers 2"];
+    $entityData = $buildingData ?: $campData; // اگر ساختمان بود استفاده کن، اگر نبود کمپ
+    
+    if (!$entityData) {
+        EditMessageText($chat_id, $message_id, "خطا: موجودیت یافت نشد.");
+        return;
+    }
 
-                break;
-            case 'plan-3':
-                $nums = $buildingsTable ? $buildingsTable["upgrade items numbers 3"] : $campsTable["upgrade items numbers 3"];
+    // تعیین نام جدول مربوطه برای آپدیت نهایی
+    $currentEntityTable = $buildingData ? $cityBuildingsTable : $cityCampsTable;
+    $entityEnglishName = $entityData["english name"];
 
-                break;
+    // 2. استخراج لیست هزینه‌ها بر اساس پلن
+    $planIndex = str_replace('plan-', '', $plan);
+    $planIndex = empty($planIndex) ? '1' : $planIndex; // اگر plan بود، تبدیل به شماره کن
+    $nums = $entityData["upgrade items numbers $planIndex"] ?? "";
 
-            default:
-                $nums = $buildingsTable ? $buildingsTable["upgrade items numbers 1"] : $campsTable["upgrade items numbers 1"];
-                break;
-        }
-        $buildingEnglishName = $buildingsTable ? $buildingsTable["english name"] : $campsTable["english name"];
-        $campOrBuilding = $buildingsTable ? $cityBuildingsTable : $cityCampsTable;
-        $costsArray = explode("\n", $nums);
-        $result = [];
-        foreach ($costsArray as $vlue) {
-            $vlue = explode("=>", $vlue);
-            $itemPersianName = trim($vlue[0]);
-            $number = trim($vlue[1]);
-            $theItemsTable = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$itemsTable` WHERE `persian name` = '{$itemPersianName}' LIMIT 1"));
-            $itemEnglishName = $theItemsTable["english name"];
-            $cityItems = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$cityItemsTable` WHERE `city id` = '{$chat_id}' LIMIT 1"));
-            $item = $cityItems[$itemEnglishName];
-            if ($item) {
-                $itemArray = explode("@", $item);
-                if ($vlue[1] <= $itemArray[1]) {
-                    $newNumber = $itemArray[1] - $vlue[1];
-                    $string = "$itemEnglishName@$newNumber";
-                    array_push($result, $string);
-                } else {
-                    $string = "false";
-                    array_push($result, $string);
-                }
-            } else {
-                ## nothing
+    if (empty($nums)) {
+        EditMessageText($chat_id, $message_id, "این پلن هزینه‌ای ندارد یا نامعتبر است.");
+        return;
+    }
+
+    $costsArray = explode("\n", trim($nums));
+    $updateQueue = []; // برای ذخیره موقت تغییرات
+    $canProceed = true;
+
+    // 3. مرحله بررسی (Validation) - بدون هیچ آپدیتی در دیتابیس
+    foreach ($costsArray as $line) {
+        if (empty(trim($line)) || strpos($line, '=>') === false) continue;
+
+        list($itemPersianName, $requiredAmount) = array_map('trim', explode("=>", $line));
+        $requiredAmount = intval($requiredAmount);
+
+        // پیدا کردن اطلاعات آیتم/آدم (در اینجا از یک متد تجمیعی استفاده می‌کنیم)
+        $itemInfo = null;
+        
+        // الف) چک کردن در جدول Items
+        $itemRow = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `english name` FROM `$itemsTable` WHERE `persian name` = '{$itemPersianName}' LIMIT 1"));
+        if ($itemRow) {
+            $engName = $itemRow['english name'];
+            $cityItems = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$engName` FROM `$cityItemsTable` WHERE `city id` = '{$chat_id}' LIMIT 1"));
+            $currentValStr = $cityItems[$engName] ?? "0@0";
+            $itemInfo = ['type' => 'item', 'eng' => $engName, 'persian' => explode('@', $currentValStr)[0], 'current' => intval(explode('@', $currentValStr)[1])];
+        } 
+        // ب) چک کردن در جدول People
+        else {
+            $personRow = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `english name` FROM `$peopleTable` WHERE `persian name` = '{$itemPersianName}' LIMIT 1"));
+            if ($personRow) {
+                $engName = $personRow['english name'];
+                $cityPeople = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$engName` FROM `$cityPeopleTable` WHERE `city id` = '{$chat_id}' LIMIT 1"));
+                $currentValStr = $cityPeople[$engName] ?? "0@0";
+                $itemInfo = ['type' => 'person', 'eng' => $engName, 'persian' => explode('@', $currentValStr)[0], 'current' => intval(explode('@', $currentValStr)[1])];
             }
         }
 
-        foreach ($costsArray as $vlue) {
-            $vlue = explode("=>", $vlue);
-            $itemPersianName = trim($vlue[0]);
-            $number = trim($vlue[1]);
-            $thePeopleTable = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$peopleTable` WHERE `persian name` = '{$itemPersianName}' LIMIT 1"));
-            $personEnglishName = $thePeopleTable["english name"];
-            $cityPeople = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$cityPeopleTable` WHERE `city id` = '{$chat_id}' LIMIT 1"));
-            $person = $cityPeople[$personEnglishName];
-            $itemArray = explode("@", $person);
-            if ($person) {
-                if ($vlue[1] <= $itemArray[1]) {
-                    $newNumber = $itemArray[1] - $vlue[1];
-                    $string = "$personEnglishName@$newNumber";
-                    array_push($result, $string);
-                } else {
-                    $string = "false";
-                    array_push($result, $string);
-                }
-            } else {
-                ## nothing
-            }
-        }
-
-        if (in_array("false", $result)) {
-            EditMessageText($chat_id, $message_id, "منابع کافی نیست");
+        if ($itemInfo && $itemInfo['current'] >= $requiredAmount) {
+            $updateQueue[] = [
+                'type' => $itemInfo['type'],
+                'eng' => $itemInfo['eng'],
+                'persian' => $itemInfo['persian'],
+                'new_val' => $itemInfo['current'] - $requiredAmount
+            ];
         } else {
-            foreach ($result as $value) {
-                $value = explode("@", $value);
-                $englishName = $value[0];
-                $newNum = $value[1];
-                $cityItems = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$cityItemsTable` WHERE `city id` = '{$chat_id}' LIMIT 1"));
-                $item = $cityItems["$englishName"];
-                $itemArray = explode("@", $item);
-                $itemPersianName = $itemArray[0];
-                $save = "$itemPersianName@$newNum";
-                $conn->query("UPDATE `$cityItemsTable` SET `{$englishName}` = '{$save}' WHERE `city id` = '{$chat_id}' LIMIT 1");
-            }
-            foreach ($result as $value) {
-                $value = explode("@", $value);
-                $englishName = $value[0];
-                $newNum = $value[1];
-                $cityItems = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$cityPeopleTable` WHERE `city id` = '{$chat_id}' LIMIT 1"));
-                $item = $cityItems["$englishName"];
-                $itemArray = explode("@", $item);
-                $itemPersianName = $itemArray[0];
-                $save = "$itemPersianName@$newNum";
-                $conn->query("UPDATE `$cityPeopleTable` SET `{$englishName}` = '{$save}' WHERE `city id` = '{$chat_id}' LIMIT 1");
-            }
-            $cityBuildings = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$campOrBuilding` WHERE `city id` = '{$chat_id}' LIMIT 1"));
-            $building = $cityBuildings["$buildingEnglishName"];
-            $buildingArray = explode("@", $building);
-            $buildingPersianName = $buildingArray[0];
-            $newLevel = $buildingArray[1] + 1;
-            $save = "$buildingPersianName@$newLevel";
-            $conn->query("UPDATE `$campOrBuilding` SET `{$buildingEnglishName}` = '{$save}' WHERE `city id` = '{$chat_id}' LIMIT 1");
-            EditMessageText($chat_id, $message_id, "Done!");
+            $canProceed = false;
+            break;
         }
     }
+
+    // 4. مرحله اجرا (Execution) - فقط اگر همه چیز اوکی بود
+    if (!$canProceed || empty($updateQueue)) {
+        EditMessageText($chat_id, $message_id, "❌ منابع کافی نیست!");
+    } else {
+        // شروع آپدیت‌ها
+        foreach ($updateQueue as $upd) {
+            $saveString = "{$upd['persian']}@{$upd['new_val']}";
+            $targetTable = ($upd['type'] === 'item') ? $cityItemsTable : $cityPeopleTable;
+            $conn->query("UPDATE `$targetTable` SET `{$upd['eng']}` = '{$saveString}' WHERE `city id` = '{$chat_id}' LIMIT 1");
+        }
+
+        // آپدیت سطح ساختمان/کمپ
+        $cityEntity = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$currentEntityTable` WHERE `city id` = '{$chat_id}' LIMIT 1"));
+        $eParts = explode('@', $cityEntity[$entityEnglishName]);
+        $newLevel = intval($eParts[1]) + 1;
+        $saveEntity = "{$eParts[0]}@$newLevel";
+        $conn->query("UPDATE `$currentEntityTable` SET `{$entityEnglishName}` = '{$saveEntity}' WHERE `city id` = '{$chat_id}' LIMIT 1");
+
+        EditMessageText($chat_id, $message_id, "✅ با موفقیت ارتقا یافت!");
+    }
+}
+
     if ($text == "No") {
         EditMessageText($chat_id, $message_id, "این ارتقا لغو شد قربان!");
     }
