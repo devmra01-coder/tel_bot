@@ -63,6 +63,7 @@ if (in_array($from_id, $admins)) {
             
             foreach ($tables as $table) {
                 $sql = "DROP TABLE IF EXISTS `$table`";
+                $conn->query($sql)
             }
 
             bot('sendMessage', [
