@@ -111,36 +111,52 @@ $upgradeItemsNums_1 $upgradeItemsNums_2 $upgradeItemsNums_3
     $canProceed = true;
 
     // ۴. بررسی منابع
+    // ... داخل حلقه foreach ...
     foreach ($costsLines as $line) {
         if (empty(trim($line)) || strpos($line, '=>') === false) continue;
-
+    
         list($resName, $amountNeeded) = array_map('trim', explode("=>", $line));
         $amountNeeded = intval($amountNeeded);
-
-        // جستجو در آیتم‌ها و سپس افراد
+    
         $resData = null;
-        $qItem = mysqli_query($conn, "SELECT `english name` FROM `$itemsTable` WHERE `persian name` = '" . mysqli_real_escape_string($conn, $resName) . "' LIMIT 1");
+        $resNameEscaped = mysqli_real_escape_string($conn, $resName);
         
-        if ($item = mysqli_fetch_assoc($qItem)) {
-            $eng = $item['english name'];
-            $val = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$eng` FROM `$cityItemsTable` WHERE `city id` = '{$chat_id}' LIMIT 1"))[$eng] ?? "0@0";
-            $curr = intval(explode('@', $val)[1]);
-            $resData = ['table' => $cityItemsTable, 'eng' => $eng, 'needed' => $amountNeeded, 'current' => $curr, 'original' => $val];
-        } else {
-            $qPerson = mysqli_query($conn, "SELECT `english name` FROM `$peopleTable` WHERE `persian name` = '" . mysqli_real_escape_string($conn, $resName) . "' LIMIT 1");
-            if ($person = mysqli_fetch_assoc($qPerson)) {
-                $eng = $person['english name'];
-                $val = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$eng` FROM `$cityPeopleTable` WHERE `city id` = '{$chat_id}' LIMIT 1"))[$eng] ?? "0@0";
-                $curr = intval(explode('@', $val)[1]);
-                $resData = ['table' => $cityPeopleTable, 'eng' => $eng, 'needed' => $amountNeeded, 'current' => $curr, 'original' => $val];
-            }
+        // ۱. پیدا کردن نام انگلیسی (برای نام ستون)
+        $qItem = mysqli_query($conn, "SELECT `english name` FROM `$itemsTable` WHERE `persian name` = '$resNameEscaped' LIMIT 1");
+        $type = 'item';
+        
+        if (mysqli_num_rows($qItem) == 0) {
+            $qItem = mysqli_query($conn, "SELECT `english name` FROM `$peopleTable` WHERE `persian name` = '$resNameEscaped' LIMIT 1");
+            $type = 'person';
         }
-
-        if ($resData && $resData['current'] >= $resData['needed']) {
-            $requiredResources[] = $resData;
-        } else {
-            $canProceed = false;
-            break;
+    
+        if ($row = mysqli_fetch_assoc($qItem)) {
+            $colName = $row['english name'];
+            $tableName = ($type == 'item') ? $cityItemsTable : $cityPeopleTable;
+    
+            // ۲. خواندن مقدار از جدول شهر
+            $checkCol = mysqli_query($conn, "SELECT `$colName` FROM `$tableName` WHERE `city id` = '{$chat_id}' LIMIT 1");
+            
+            if ($checkCol && mysqli_num_rows($checkCol) > 0) {
+                $data = mysqli_fetch_assoc($checkCol);
+                $val = $data[$colName] ?? "0@0";
+                
+                // استخراج عدد بعد از @
+                $parts = explode('@', $val);
+                $currentAmount = isset($parts[1]) ? intval(trim($parts[1])) : 0;
+    
+                if ($currentAmount >= $amountNeeded) {
+                    $resData = ['table' => $tableName, 'col' => $colName, 'needed' => $amountNeeded, 'current' => $currentAmount, 'original' => $val];
+                } else {
+                    // دیباگ: اگر مقدار کمتر است
+                    // SendMessage($chat_id, "کمبود منابع: $resName (نیاز: $amountNeeded, موجود: $currentAmount)", "HTML", $message_id);
+                    $canProceed = false; break;
+                }
+            } else {
+                // ستون در جدول شهر وجود ندارد (احتمال خطای ساختاری دیتابیس)
+                SendMessage($chat_id, "خطای سیستمی: ستون $colName در دیتابیس شهر یافت نشد.", "HTML", $message_id);
+                $canProceed = false; break;
+            }
         }
     }
 
