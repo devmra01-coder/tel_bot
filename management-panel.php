@@ -151,10 +151,8 @@ if (in_array($from_id, $admins)) {
     //     SendMessage($chat_id, "Done!", "HTML", $message_id);
     //     $conn->query("DELETE FROM `$citiesTable` WHERE `city id` = '{$chat_id}'");
     // }
-    if (trim($text) === "Delete gap") {
-        $chatId = mysqli_real_escape_string($conn, $chat_id);
-    
-        $deleteQuery = $conn->query("DELETE FROM `$citiesTable` WHERE `city id` = '$chatId' LIMIT 1");
+    if ($text === "Delete gap") {
+        $deleteQuery = $conn->query("DELETE FROM `$citiesTable` WHERE `city id` = '$chat_id' LIMIT 1");
     
         if ($deleteQuery) {
             SendMessage($chat_id, "Done!", "HTML", $message_id);
