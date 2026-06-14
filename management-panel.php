@@ -147,10 +147,22 @@ if (in_array($from_id, $admins)) {
         $conn->query("UPDATE `$citiesTable` SET `step`='none' WHERE `city id`='{$chat_id}'LIMIT 1");
     }
     //---------------------------------------------------------
-    if ($text == "Delete gap") {
-        SendMessage($chat_id, "Done!", "HTML", $message_id);
-        $conn->query("DELETE FROM `$citiesTable` WHERE `city id` = '{$chat_id}'");
+    // if ($text == "Delete gap") {
+    //     SendMessage($chat_id, "Done!", "HTML", $message_id);
+    //     $conn->query("DELETE FROM `$citiesTable` WHERE `city id` = '{$chat_id}'");
+    // }
+    if (trim($text) === "Delete gap") {
+        $chatId = mysqli_real_escape_string($conn, $chat_id);
+    
+        $deleteQuery = $conn->query("DELETE FROM `$citiesTable` WHERE `city id` = '$chatId' LIMIT 1");
+    
+        if ($deleteQuery) {
+            SendMessage($chat_id, "Done!", "HTML", $message_id);
+        } else {
+            SendMessage($chat_id, "❌ Error while deleting data!", "HTML", $message_id);
+        }
     }
+
     //---------------------------------------------------------
     $editSelector = [];
     while ($row = mysqli_fetch_assoc($itemsListEn)) {
