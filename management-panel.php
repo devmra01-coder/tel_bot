@@ -152,14 +152,48 @@ if (in_array($from_id, $admins)) {
     //     $conn->query("DELETE FROM `$citiesTable` WHERE `city id` = '{$chat_id}'");
     // }
     if ($text === "Delete gap") {
-        $deleteQuery = $conn->query("DELETE FROM `$citiesTable` WHERE `city id` = '$chat_id' LIMIT 1");
+        // لیست تمام جداولی که اطلاعات یک شهر در آن‌ها ذخیره می‌شود
+        $dataTables = [
+            $citiesTable,
+            $cityBuildingsTable,
+            $cityItemsTable,
+            $citySoldiersTable,
+            $cityPeopleTable,
+            $cityCampsTable
+        ];
     
-        if ($deleteQuery) {
-            SendMessage($chat_id, "Done!", "HTML", $message_id);
-        } else {
-            SendMessage($chat_id, "❌ Error while deleting data!", "HTML", $message_id);
+        // شروع تراکنش برای اطمینان از یکپارچگی داده‌ها
+        $conn->begin_transaction();
+    
+        try {
+            $allSuccess = true;
+            
+            foreach ($dataTables as $table) {
+                // حذف رکورد مربوط به این شهر از هر جدول
+                $result = $conn->query("DELETE FROM `$table` WHERE `city id` = '$chat_id'");
+                
+                // بررسی موفقیت‌آمیز بودن حذف (اگر کوئری اجرا نشد)
+                if (!$result) {
+                    $allSuccess = false;
+                    break;
+                }
+            }
+    
+            if ($allSuccess) {
+                // تایید تغییرات
+                $conn->commit();
+                SendMessage($chat_id, "✅ شهر و تمامی داده‌های مربوط به آن با موفقیت حذف شدند.", "HTML", $message_id);
+            } else {
+                // بازگشت به حالت قبل در صورت بروز خطا
+                $conn->rollback();
+                SendMessage($chat_id, "❌ خطا در حذف داده‌ها! عملیات لغو شد.", "HTML", $message_id);
+            }
+        } catch (Exception $e) {
+            $conn->rollback();
+            SendMessage($chat_id, "❌ خطای سیستمی: " . $e->getMessage(), "HTML", $message_id);
         }
     }
+
 
     //---------------------------------------------------------
     $editSelector = [];
