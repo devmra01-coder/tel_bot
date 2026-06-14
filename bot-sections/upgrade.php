@@ -69,132 +69,111 @@ $upgradeItemsNums_1 $upgradeItemsNums_2 $upgradeItemsNums_3
     $conn->query("UPDATE `$citiesTable` SET `step`='upgrade-3@$bName' WHERE `city id`='{$chat_id}'LIMIT 1");
 }else if (strpos($playerStep, "upgrade-3@") !== false && $stop == "No" && $text) {
     $bName = str_replace("upgrade-3@", '', $playerStep);
-    $plan = $text;
+    $planInput = $text; // این همان متنی است که کاربر ارسال کرده (مثلاً "plan-2")
 
-    // اگر کاربر "No" را انتخاب کرد، پیام لغو را نمایش داده و مرحله را ریست می‌کنیم
-    if ($plan === "No") {
+    if ($planInput === "No") {
         EditMessageText($chat_id, $message_id, "❌ ارتقا لغو شد.");
         $conn->query("UPDATE `$citiesTable` SET `step`='none' WHERE `city id`='{$chat_id}' LIMIT 1");
         return;
     }
 
-    // 1. تشخیص موجودیت (ساختمان یا کمپ)
-    // از متغیرهای اصلی $buildingsTable و $campsTable برای جستجو استفاده می‌کنیم
+    // ۱. استخراج شماره پلن از ورودی کاربر
+    // فرض بر این است که دکمه‌ها مقادیر "plan-1", "plan-2", "plan-3" را می‌فرستند
+    $planNumber = str_replace('plan-', '', $planInput);
+    if (!ctype_digit($planNumber)) {
+        $planNumber = '1'; // مقدار پیش‌فرض
+    }
+
+    // ۲. دریافت اطلاعات ساختمان/کمپ
     $entityData = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$buildingsTable` WHERE `persian name` = '" . mysqli_real_escape_string($conn, $bName) . "' LIMIT 1"));
-    
+    $tableType = 'building';
     if (!$entityData) {
         $entityData = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$campsTable` WHERE `persian name` = '" . mysqli_real_escape_string($conn, $bName) . "' LIMIT 1"));
+        $tableType = 'camp';
     }
 
     if (!$entityData) {
-        EditMessageText($chat_id, $message_id, "خطا: ساختمان یا کمپ مورد نظر یافت نشد.");
-        $conn->query("UPDATE `$citiesTable` SET `step`='none' WHERE `city id`='{$chat_id}' LIMIT 1");
+        EditMessageText($chat_id, $message_id, "خطا: موجودیت یافت نشد.");
         return;
     }
 
-    // تعیین نام جدول صحیح برای نمایش و آپدیت نهایی
-    $entityEnglishName = $entityData["english name"];
-    $currentEntityTable = isset($entityData['upgrade items numbers 1']) ? $cityBuildingsTable : $cityCampsTable; // تشخیص بر اساس وجود ستون ارتقا
+    // ۳. استفاده از شماره پلن برای خواندن ستون هزینه صحیح (مثلاً upgrade items numbers 2)
+    $configKey = "upgrade items numbers $planNumber";
+    $numsConfig = $entityData[$configKey] ?? null;
 
-    // 2. استخراج لیست هزینه‌ها بر اساس پلن انتخاب شده
-    $planSuffix = str_replace('plan-', '', $plan);
-    // اگر پلن نامعتبر بود، به صورت پیش‌فرض از پلن ۱ استفاده کن
-    $planSuffix = ($planSuffix === '' || !ctype_digit($planSuffix)) ? '1' : $planSuffix; 
-    $numsConfig = $entityData["upgrade items numbers $planSuffix"];
-
-    if (empty($numsConfig)) {
-        EditMessageText($chat_id, $message_id, "این پلن هزینه‌ای ندارد یا نامعتبر است.");
-        $conn->query("UPDATE `$citiesTable` SET `step`='none' WHERE `city id`='{$chat_id}' LIMIT 1");
+    if (!$numsConfig) {
+        EditMessageText($chat_id, $message_id, "❌ این پلن برای این سطح تعریف نشده است.");
         return;
     }
 
     $costsLines = explode("\n", trim($numsConfig));
-    $requiredResources = []; // ذخیره منابع مورد نیاز برای این ارتقا
-    $canProceed = true;      // فلگ برای اینکه آیا ارتقا ممکن است یا خیر
+    $requiredResources = [];
+    $canProceed = true;
 
-    // 3. مرحله بررسی منابع (Validation Phase) - فقط خواندن از دیتابیس
+    // ۴. بررسی منابع
     foreach ($costsLines as $line) {
         if (empty(trim($line)) || strpos($line, '=>') === false) continue;
 
-        list($resourcePersianName, $amountNeeded) = array_map('trim', explode("=>", $line));
+        list($resName, $amountNeeded) = array_map('trim', explode("=>", $line));
         $amountNeeded = intval($amountNeeded);
 
-        $resourceInfo = null;
-
-        // جستجو در آیتم‌ها
-        $itemQuery = mysqli_query($conn, "SELECT `english name` FROM `$itemsTable` WHERE `persian name` = '" . mysqli_real_escape_string($conn, $resourcePersianName) . "' LIMIT 1");
-        if ($itemRow = mysqli_fetch_assoc($itemQuery)) {
-            $engName = $itemRow['english name'];
-            $cityItemData = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$engName` FROM `$cityItemsTable` WHERE `city id` = '{$chat_id}' LIMIT 1"));
-            $currentValueStr = $cityItemData[$engName] ?? "0@0"; // مقدار فعلی به صورت "نام@تعداد"
-            $currentAmount = intval(explode('@', $currentValueStr)[1]);
-            $resourceInfo = ['type' => 'item', 'eng' => $engName, 'persian' => $resourcePersianName, 'needed' => $amountNeeded, 'current' => $currentAmount];
-        } 
-        // جستجو در افراد (نیروها)
-        else {
-            $personQuery = mysqli_query($conn, "SELECT `english name` FROM `$peopleTable` WHERE `persian name` = '" . mysqli_real_escape_string($conn, $resourcePersianName) . "' LIMIT 1");
-            if ($personRow = mysqli_fetch_assoc($personQuery)) {
-                $engName = $personRow['english name'];
-                $cityPersonData = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$engName` FROM `$cityPeopleTable` WHERE `city id` = '{$chat_id}' LIMIT 1"));
-                $currentValueStr = $cityPersonData[$engName] ?? "0@0"; // مقدار فعلی به صورت "نام@تعداد"
-                $currentAmount = intval(explode('@', $currentValueStr)[1]);
-                $resourceInfo = ['type' => 'person', 'eng' => $engName, 'persian' => $resourcePersianName, 'needed' => $amountNeeded, 'current' => $currentAmount];
+        // جستجو در آیتم‌ها و سپس افراد
+        $resData = null;
+        $qItem = mysqli_query($conn, "SELECT `english name` FROM `$itemsTable` WHERE `persian name` = '" . mysqli_real_escape_string($conn, $resName) . "' LIMIT 1");
+        
+        if ($item = mysqli_fetch_assoc($qItem)) {
+            $eng = $item['english name'];
+            $val = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$eng` FROM `$cityItemsTable` WHERE `city id` = '{$chat_id}' LIMIT 1"))[$eng] ?? "0@0";
+            $curr = intval(explode('@', $val)[1]);
+            $resData = ['table' => $cityItemsTable, 'eng' => $eng, 'needed' => $amountNeeded, 'current' => $curr, 'original' => $val];
+        } else {
+            $qPerson = mysqli_query($conn, "SELECT `english name` FROM `$peopleTable` WHERE `persian name` = '" . mysqli_real_escape_string($conn, $resName) . "' LIMIT 1");
+            if ($person = mysqli_fetch_assoc($qPerson)) {
+                $eng = $person['english name'];
+                $val = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$eng` FROM `$cityPeopleTable` WHERE `city id` = '{$chat_id}' LIMIT 1"))[$eng] ?? "0@0";
+                $curr = intval(explode('@', $val)[1]);
+                $resData = ['table' => $cityPeopleTable, 'eng' => $eng, 'needed' => $amountNeeded, 'current' => $curr, 'original' => $val];
             }
         }
 
-        // بررسی کافی بودن منبع
-        if ($resourceInfo && $resourceInfo['current'] >= $resourceInfo['needed']) {
-            $requiredResources[] = $resourceInfo; // اضافه کردن به لیست منابع مورد نیاز
+        if ($resData && $resData['current'] >= $resData['needed']) {
+            $requiredResources[] = $resData;
         } else {
-            $canProceed = false; // اگر حتی یک منبع کم باشد، ارتقا ممکن نیست
-            break; // خروج از حلقه بررسی
+            $canProceed = false;
+            break;
         }
     }
 
-    // 4. مرحله اجرا (Execution Phase) - فقط اگر همه منابع کافی بودند
-    if (!$canProceed || empty($requiredResources)) {
-        EditMessageText($chat_id, $message_id, "❌ منابع کافی نیست!");
-    } else {
-        // شروع تراکنش (Transaction) برای اطمینان از اینکه یا همه آپدیت‌ها انجام شوند یا هیچکدام
+    // ۵. اجرای تراکنش
+    if ($canProceed && !empty($requiredResources)) {
         $conn->begin_transaction();
         try {
-            // کسر منابع (آیتم‌ها و افراد)
-            foreach ($requiredResources as $resource) {
-                $targetTable = ($resource['type'] === 'item') ? $cityItemsTable : $cityPeopleTable;
-                $currentTotal = $resource['current'] - $resource['needed'];
-                // فرض بر این است که نام فارسی همیشه در ایندکس 0 و تعداد در ایندکس 1 ذخیره شده است
-                $currentName = explode('@', mysqli_fetch_assoc(mysqli_query($conn, "SELECT `{$resource['eng']}` FROM `$targetTable` WHERE `city id` = '{$chat_id}' LIMIT 1"))[$resource['eng']])[0];
-                $saveString = "{$currentName}@{$currentTotal}";
-                
-                if (!$conn->query("UPDATE `$targetTable` SET `{$resource['eng']}` = '{$saveString}' WHERE `city id` = '{$chat_id}' LIMIT 1")) {
-                    throw new Exception("Failed to update resource: " . $resource['eng']);
-                }
+            foreach ($requiredResources as $res) {
+                $parts = explode('@', $res['original']);
+                $newName = $parts[0];
+                $newVal = $res['current'] - $res['needed'];
+                $conn->query("UPDATE `{$res['table']}` SET `{$res['eng']}` = '{$newName}@{$newVal}' WHERE `city id` = '{$chat_id}'");
             }
 
-            // ارتقاء سطح ساختمان/کمپ
-            $entityDataFromDb = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$currentEntityTable` WHERE `city id` = '{$chat_id}' LIMIT 1"));
-            $currentEntityValue = $entityDataFromDb[$entityEnglishName]; // مثلا "نام@سطح"
-            $entityParts = explode('@', $currentEntityValue);
-            $newLevel = intval($entityParts[1]) + 1;
-            $saveEntityString = "{$entityParts[0]}@{$newLevel}";
+            // ارتقای سطح خود ساختمان/کمپ
+            $targetTable = ($tableType == 'building') ? $cityBuildingsTable : $cityCampsTable;
+            $engName = $entityData['english name'];
+            $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$engName` FROM `$targetTable` WHERE `city id` = '{$chat_id}' LIMIT 1"));
+            $currentVal = $row[$engName];
+            $parts = explode('@', $currentVal);
+            $newLevel = intval($parts[1]) + 1;
+            $conn->query("UPDATE `$targetTable` SET `$engName` = '{$parts[0]}@{$newLevel}' WHERE `city id` = '{$chat_id}'");
 
-            if (!$conn->query("UPDATE `$currentEntityTable` SET `{$entityEnglishName}` = '{$saveEntityString}' WHERE `city id` = '{$chat_id}' LIMIT 1")) {
-                throw new Exception("Failed to update entity level: " . $entityEnglishName);
-            }
-
-            // اگر همه مراحل موفق بود، تراکنش را نهایی کن
             $conn->commit();
-            EditMessageText($chat_id, $message_id, "✅ ارتقا با موفقیت انجام شد!");
-
+            EditMessageText($chat_id, $message_id, "✅ ارتقا به سطح $newLevel با موفقیت انجام شد!");
         } catch (Exception $e) {
-            // در صورت بروز خطا، تراکنش را لغو کن
             $conn->rollback();
-            // اینجا می‌توانید خطای دقیق را لاگ کنید
-            error_log("Upgrade transaction failed: " . $e->getMessage());
-            EditMessageText($chat_id, $message_id, "❌ خطای داخلی در هنگام ارتقا رخ داد. لطفاً دوباره تلاش کنید.");
+            EditMessageText($chat_id, $message_id, "❌ خطا در انجام تراکنش.");
         }
+    } else {
+        EditMessageText($chat_id, $message_id, "❌ منابع کافی برای این پلن ندارید.");
     }
 
-    // ریست کردن مرحله کاربر پس از پردازش
-    $conn->query("UPDATE `$citiesTable` SET `step`='none' WHERE `city id`='{$chat_id}'LIMIT 1");
+    $conn->query("UPDATE `$citiesTable` SET `step`='none' WHERE `city id`='{$chat_id}'");
 }
+
