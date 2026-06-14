@@ -61,20 +61,38 @@ if (in_array($from_id, $admins)) {
                 $cityCampsTable
             ];
             
+            // استفاده از یک فلگ برای اطمینان از موفقیت همه عملیات
+            $error = false;
             foreach ($tables as $table) {
-                $sql = "DROP TABLE IF EXISTS `$table`";
-                $conn->query($sql)
+                // اطمینان از خالی نبودن نام جدول برای جلوگیری از خطاهای ناخواسته
+                if (!empty($table)) {
+                    if (!$conn->query("DROP TABLE IF EXISTS `$table`")) {
+                        $error = true;
+                        break;
+                    }
+                }
             }
-
-            bot('sendMessage', [
-                'chat_id' => $chat_id,
-                'text' => "Done!",
-                'parse_mode' => "HTML",
-                'reply_to_message_id' => $message_id,
-                'reply_markup' => $adminBack,
-            ]);
-            $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}'LIMIT 1");
+        
+            if (!$error) {
+                // آپدیت مرحله ادمین پس از موفقیت
+                $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
+                
+                bot('sendMessage', [
+                    'chat_id' => $chat_id,
+                    'text' => "✅ تمامی جداول با موفقیت حذف شدند!",
+                    'parse_mode' => "HTML",
+                    'reply_to_message_id' => $message_id,
+                    'reply_markup' => $adminBack,
+                ]);
+            } else {
+                bot('sendMessage', [
+                    'chat_id' => $chat_id,
+                    'text' => "❌ خطا در حذف جداول: " . $conn->error,
+                    'reply_to_message_id' => $message_id,
+                ]);
+            }
         }
+
 
         if ($text == "❌") {
             bot('sendMessage', [
