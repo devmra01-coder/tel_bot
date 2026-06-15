@@ -64,8 +64,22 @@ if (in_array($from_id, $admins)) {
             foreach ($tables as $table) {
                 // اطمینان از خالی نبودن نام جدول برای جلوگیری از خطاهای ناخواسته
                 if (!empty($table)) {
-                    if (!$conn->query("DROP TABLE IF EXISTS `$table`")) { 
-                        break;
+                    if (!$conn->query("DROP TABLE IF EXISTS `$table`")) {  
+                        bot('sendMessage', [
+                            'chat_id' => $chat_id,
+                            'text' => "جدول $table به درستی حذف نشد !",
+                            'parse_mode' => "HTML",
+                            'reply_to_message_id' => $message_id,
+                            'reply_markup' => $adminBack,
+                        ]);
+                    }else {
+                        bot('sendMessage', [
+                            'chat_id' => $chat_id,
+                            'text' => "✅  جدول $table  با موفقیت حذف شدند!",
+                            'parse_mode' => "HTML",
+                            'reply_to_message_id' => $message_id,
+                            'reply_markup' => $adminBack,
+                        ]);
                     }
                 }
             }  
