@@ -75,12 +75,19 @@ if (in_array($from_id, $admins)) {
                     }else {
                         bot('sendMessage', [
                             'chat_id' => $chat_id,
-                            'text' => "✅  جدول $table  با موفقیت حذف شدند!",
+                            'text' => "✅  جدول $table  با موفقیت حذف شد!",
                             'parse_mode' => "HTML",
                             'reply_to_message_id' => $message_id,
                             'reply_markup' => $adminBack,
                         ]);
                     }
+                }else {
+                    bot('sendMessage', [
+                        'chat_id' => $chat_id,
+                        'text' => "❌ خطا در حذف جداول: " . $conn->error,
+                        'reply_to_message_id' => $message_id,
+                    ]);
+                    break;
                 }
             }  
             $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
