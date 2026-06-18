@@ -64,6 +64,11 @@ $playerPanel = json_encode([
         [['text' => "[⚒]- ارتقا", 'callback_data' => "upgrade"],['text' => "[📦]- تجارت", 'callback_data' => "trading"]]
     ]
 ]);
+$Back = json_encode([
+    'inline_keyboard' => [
+        [['text' => "[🔙]- بازگشت", 'callback_data' => "Back"]]
+                        ]
+]);
 
 $adminBack = json_encode([
     'keyboard' => [
