@@ -39,7 +39,7 @@ if ($data == "trading" || $text == "Back") {
             ",
             'message_id' => $message_id,
             'parse_mode' => "HTML",
-            'reply_markup' => $playerPanel,
+            'reply_markup' => $Back,
         ]);
     } else {
         if ($itemNum[1] >= $text) {
@@ -58,7 +58,7 @@ if ($data == "trading" || $text == "Back") {
                     ",
                 'message_id' => $message_id,
                 'parse_mode' => "HTML",
-                'reply_markup' => $playerPanel,
+                'reply_markup' => $Back,
             ]);
         }
     }
@@ -107,7 +107,7 @@ if ($data == "trading" || $text == "Back") {
             'message_id' => $message_id,
             'text' => "",
             'parse_mode' => "HTML",
-            'reply_markup' => $playerPanel,
+            'reply_markup' => $Back 
         ]);
     }
     $conn->query("UPDATE `$citiesTable` SET `step`='none' WHERE `city id`='{$chat_id}'LIMIT 1");
