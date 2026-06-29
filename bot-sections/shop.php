@@ -3,7 +3,7 @@
 // ===============================================
 
 // ==================== ورود به بازار ====================
-if (in_array($text, ['بازار', 'فروشگاه', 'shop']) || $data == "shop") {
+if (in_array($text, ['بازار', 'فروشگاه', 'shoping']) || $data == "shop") {
     $keyboard = json_encode([
         'inline_keyboard' => [
             [['text' => '🛒 خرید از بازار', 'callback_data' => 'shop_buy']],
