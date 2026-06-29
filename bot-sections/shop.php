@@ -18,7 +18,7 @@ if ($text == "shoping" || $data == "shoping") {
     $conn->query("UPDATE `$citiesTable` SET `step`='shop_main' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
 
-// ==================== ارتقا ====================
+// ==================== ورود به ارتقا ====================
 else if ($data == "upgrade_menu" || $playerStep == "upgrade_menu") {
     $buttons = upgradeKeyboard($conn, $chat_id, $cityBuildingsTable, $buildingsTable, $cityCampsTable, $campsTable);
     $keyboard = json_encode(['inline_keyboard' => $buttons]);
@@ -27,15 +27,14 @@ else if ($data == "upgrade_menu" || $playerStep == "upgrade_menu") {
     $conn->query("UPDATE `$citiesTable` SET `step`='upgrade_1' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
 
-// انتخاب آیتم برای ارتقا
+// انتخاب ساختمان برای ارتقا
 else if ($playerStep == "upgrade_1" && $data) {
-    $upgradeName = $data; // مثلاً "کارخانه" یا "سر بازخانه"
+    $upgradeName = $data;
     $item = getUpgradeItem($conn, $upgradeName, $buildingsTable, $campsTable);
 
-    if (!$item) {
-        bot('answerCallbackQuery', ['callback_query_id' => $callback_id ?? '', 'text' => "❌ مورد یافت نشد", 'show_alert' => true]);
-        return;
-    }
+    if (!$item) return;
+
+    $status = checkUpgradeStatus($conn, $chat_id, $upgradeName, $item, $cityBuildingsTable, $cityCampsTable);
 
     $currentLevel = getCurrentLevel($conn, $chat_id, $upgradeName, $cityBuildingsTable, $cityCampsTable);
     $nextLevel = $currentLevel + 1;
@@ -43,21 +42,22 @@ else if ($playerStep == "upgrade_1" && $data) {
     $costs = getUpgradeCosts($conn, $upgradeName, $nextLevel, $buildingsTable, $campsTable);
 
     $text = "⚒ ارتقای <b>{$upgradeName}</b>\n";
-    $text .= "📊 سطح فعلی: {$currentLevel} → {$nextLevel}\n\n";
-    $text .= "💰 هزینه ارتقا:\n" . formatCosts($costs) . "\n\n";
-    $text .= "آیا ارتقا انجام شود؟";
+    $text .= "📊 سطح: {$currentLevel} → {$nextLevel}\n\n";
+    $text .= "💰 هزینه:\n" . formatCosts($costs) . "\n\n";
 
-    bot('sendMessage', [
-        'chat_id' => $chat_id,
-        'text' => $text,
-        'parse_mode' => 'HTML',
-        'reply_markup' => $inlineYesOrNo
-    ]);
+    if (!$status['can_upgrade']) {
+        $text .= "❌ " . $status['message'];
+        $keyboard = json_encode([['inline_keyboard' => [[['text' => '🔙 بازگشت', 'callback_data' => 'upgrade_menu']]]]]);
+    } else {
+        $text .= "تأیید می‌کنید؟";
+        $keyboard = $inlineYesOrNo;
+        $conn->query("UPDATE `$citiesTable` SET `step`='upgrade_2', `sendItem`='{$upgradeName}', `sendItemNum`='{$nextLevel}' WHERE `city id`='{$chat_id}' LIMIT 1");
+    }
 
-    $conn->query("UPDATE `$citiesTable` SET `step`='upgrade_2', `sendItem`='{$upgradeName}', `sendItemNum`='{$nextLevel}' WHERE `city id`='{$chat_id}' LIMIT 1");
+    bot('sendMessage', ['chat_id' => $chat_id, 'text' => $text, 'parse_mode' => 'HTML', 'reply_markup' => $keyboard]);
 }
 
-// تأیید ارتقا
+// تأیید نهایی ارتقا
 else if ($playerStep == "upgrade_2" && $text == "yes") {
     $upgradeName = $player['sendItem'];
     $nextLevel = (int)$player['sendItemNum'];
@@ -85,6 +85,8 @@ else if ($playerStep == "upgrade_2" && $text == "yes") {
 
     $conn->query("UPDATE `$citiesTable` SET `step`='none' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
+
+    
 // ==================== نمایش لیست آیتم‌ها ====================
 else if ($data == "shop_buy" || $playerStep == "shop_buy") {
     $buttons = getShopBuyButtons($conn, $chat_id);
