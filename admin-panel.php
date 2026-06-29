@@ -1,7 +1,7 @@
 <?php
 
 if (in_array($from_id, $admins)) {
-    if ($text == "پنل" || $text == "🔙") {
+    if ($text == "پنل" || $text == "🔙" || $text == "admin_back") {
         bot('sendMessage', [
             'chat_id' => $chat_id,
             'text' => "👤|به پنل ادمین خوش آمدید",
