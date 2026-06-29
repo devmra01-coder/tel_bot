@@ -1,7 +1,7 @@
 <?php
 
 if (in_array($from_id, $admins)) {
-    if ($text == "پنل" || $text == "🔙" || $text == "admin_back") {
+    if ($text == "پنل" || $text == "🔙") {
         
         $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}'LIMIT 1");
         bot('sendMessage', [
