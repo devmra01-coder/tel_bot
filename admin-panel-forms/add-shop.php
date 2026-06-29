@@ -108,36 +108,3 @@ else if ($theAdminStep == "shop_add_limits" && $text != "🔙") {
 }
 
 
-function getAllGameItems($conn) {
-    $items = [];
-    $tables = ['itemsTable', 'peopleTable', 'soldiersTable'];
-    
-    foreach ($tables as $tableVar) {
-        global $$tableVar;
-        $table = $$tableVar;
-        $q = mysqli_query($conn, "SELECT `english name` as english, `persian name` as persian FROM `$table`");
-        while ($row = mysqli_fetch_assoc($q)) {
-            $items[] = $row;
-        }
-    }
-    return $items;
-}
-
-function showCostSelectionKeyboard($conn, $chat_id, $targetItem) {
-    $allItems = getAllGameItems($conn);
-    $keyboard = ['inline_keyboard' => []];
-
-    foreach ($allItems as $item) {
-        $keyboard['inline_keyboard'][] = [[
-            'text' => "💰 " . $item['persian'],
-            'callback_data' => "cost_" . $targetItem . "_" . $item['english']
-        ]];
-    }
-    $keyboard['inline_keyboard'][] = [['text' => "✅ تمام شد", 'callback_data' => "cost_done_" . $targetItem]];
-
-    bot('sendMessage', [
-        'chat_id' => $chat_id,
-        'text' => "انتخاب کنید کدام آیتم هزینه خرید باشد:",
-        'reply_markup' => json_encode($keyboard)
-    ]);
-}
