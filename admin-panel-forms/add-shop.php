@@ -7,7 +7,7 @@ if ($text == "[🛒]- افزودن آیتم خرید" && $theAdminStep == "none"
     foreach ($allItems as $item) {
         $keyboard['inline_keyboard'][] = [[
             'text' => $item['persian'] . " (" . $item['english'] . ")",
-            'callback_data' => "shopadd_" . $item['english']
+            'callback_data' => $item['english']
         ]];
     }
     $keyboard['inline_keyboard'][] = [['text' => '🔙 بازگشت', 'callback_data' => '🔙']];
@@ -23,8 +23,8 @@ if ($text == "[🛒]- افزودن آیتم خرید" && $theAdminStep == "none"
 }
 
 // انتخاب آیتم اصلی
-else if ($theAdminStep == "shop_add_select" && strpos($data, 'shopadd_') === 0) {
-    $englishName = str_replace('shopadd_', '', $data);
+else if ($theAdminStep == "shop_add_select") {
+    $englishName = $data ;
     
     bot('sendMessage', [
         'chat_id' => $chat_id,
