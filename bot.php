@@ -63,6 +63,7 @@ if ($tc == "private") {
         include './bot-sections/player-panel.php';
         include './bot-sections/upgrade.php';
         include './bot-sections/trading.php';
+        include './bot-sections/shop.php';
     }
 }
 
