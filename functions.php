@@ -529,3 +529,68 @@ function logOneTimePurchase($conn, $city_id, $item_name) {
     mysqli_query($conn, "INSERT INTO `shop_one_time_log` (`city_id`, `item_name`, `purchase_date`) 
                          VALUES ('$city_id', '$item_name', NOW())");
 }
+
+
+
+
+function getUpgradeItem($conn, $name, $buildingsTable, $campsTable) {
+    $q = mysqli_query($conn, "SELECT * FROM `$buildingsTable` WHERE `persian name` = '{$name}' LIMIT 1");
+    if ($row = mysqli_fetch_assoc($q)) return $row;
+    
+    $q = mysqli_query($conn, "SELECT * FROM `$campsTable` WHERE `persian name` = '{$name}' LIMIT 1");
+    return mysqli_fetch_assoc($q);
+}
+
+function getCurrentLevel($conn, $city_id, $name, $cityBuildingsTable, $cityCampsTable) {
+    global $cityBuildingsTable, $cityCampsTable;
+    $tables = [$cityBuildingsTable, $cityCampsTable];
+    foreach ($tables as $table) {
+        $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$name` FROM `$table` WHERE `city id`='{$city_id}' LIMIT 1"));
+        if (!empty($row[$name])) {
+            $parts = explode("@", $row[$name]);
+            return (int)($parts[1] ?? 1);
+        }
+    }
+    return 1;
+}
+
+function getUpgradeCosts($conn, $name, $level, $buildingsTable, $campsTable) {
+    $item = getUpgradeItem($conn, $name, $buildingsTable, $campsTable);
+    if (!$item) return [];
+
+    // فرض بر این است که هزینه‌ها در ستون‌های upgrade items numbers 1,2,3 ذخیره شده
+    // شما می‌توانید منطق دقیق هزینه بر اساس سطح را اینجا پیاده کنید
+    return [
+        'gold' => 1000 * $level,
+        'wood' => 200 * $level,
+        'stone' => 150 * $level
+    ];
+}
+
+function executeUpgrade($conn, $city_id, $upgradeName, $nextLevel, 
+                        $cityBuildingsTable, $cityCampsTable, 
+                        $buildingsTable, $campsTable,
+                        $cityItemsTable, $cityPeopleTable, $citySoldiersTable) {
+
+    $costs = getUpgradeCosts($conn, $upgradeName, $nextLevel, $buildingsTable, $campsTable);
+
+    if (!deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTable, $citySoldiersTable)) {
+        return ['success' => false, 'message' => 'منابع کافی برای ارتقا وجود ندارد.'];
+    }
+
+    // اعمال ارتقا
+    $tables = [$cityBuildingsTable, $cityCampsTable];
+    foreach ($tables as $table) {
+        $colCheck = mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '{$upgradeName}'");
+        if (mysqli_num_rows($colCheck) > 0) {
+            $current = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$upgradeName` FROM `$table` WHERE `city id`='{$city_id}' LIMIT 1"));
+            $parts = explode("@", $current[$upgradeName] ?? "{$upgradeName}@1");
+            $newValue = "{$parts[0]}@{$nextLevel}";
+            
+            mysqli_query($conn, "UPDATE `$table` SET `{$upgradeName}` = '{$newValue}' WHERE `city id`='{$city_id}' LIMIT 1");
+            return ['success' => true];
+        }
+    }
+
+    return ['success' => false, 'message' => 'خطا در اعمال ارتقا'];
+}
