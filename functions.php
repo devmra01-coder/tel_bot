@@ -299,7 +299,7 @@ function getShopBuyButtons($conn, $city_id) {
         $emoji = $status['can_buy'] ? '🟢' : '❌';
         $buttons[] = [['text' => $emoji . " " . $item['persian_name'], 'callback_data' => 'buy_' . $item['item_name']]];
     }
-    $buttons[] = [['text' => '🔙 بازگشت', 'callback_data' => 'shop']];
+    $buttons[] = [['text' => '🔙 بازگشت', 'callback_data' => 'Back']];
     return $buttons;
 }
 
