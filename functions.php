@@ -90,7 +90,7 @@ function upgradeKeyboard($conn, $chat_id, $cityBuildingsTable, $buildingsTable, 
     if (empty(end($btns))) array_pop($btns);
 
     // افزودن دکمه برگشت
-    $btns[] = [['text' => "🔙", 'callback_data' => "Back"]];
+    $btns[] = [['text' => "🔙", 'callback_data' => "back"]];
     
     return $btns;
 }
@@ -299,7 +299,7 @@ function getShopBuyButtons($conn, $city_id) {
         $emoji = $status['can_buy'] ? '🟢' : '❌';
         $buttons[] = [['text' => $emoji . " " . $item['persian_name'], 'callback_data' => 'buy_' . $item['item_name']]];
     }
-    $buttons[] = [['text' => '🔙 بازگشت', 'callback_data' => 'Back']];
+    $buttons[] = [['text' => '🔙 بازگشت', 'callback_data' => 'shoping']];
     return $buttons;
 }
 
