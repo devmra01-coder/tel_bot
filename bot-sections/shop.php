@@ -9,7 +9,7 @@ if ($text == "shoping" || $data == "shoping") {
         'inline_keyboard' => [
             [['text' => '🛒 خرید ', 'callback_data' => 'shop_buy']],
             [['text' => '⚒ ارتقای ', 'callback_data' => 'upgrade_menu']],
-            [['text' => '🔙 بازگشت', 'callback_data' => 'پنل']]
+            [['text' => '🔙 بازگشت', 'callback_data' => 'back']]
         ]
     ]);
 
