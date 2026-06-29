@@ -1,7 +1,8 @@
 // ===============================================
-//                سیستم خرید بازار
+//                سیستم خرید بازار (کامل)
 // ===============================================
 
+// ==================== ورود به بازار ====================
 if (in_array($text, ['بازار', 'فروشگاه', 'shop']) || $data == "shop") {
     $keyboard = json_encode([
         'inline_keyboard' => [
@@ -10,13 +11,13 @@ if (in_array($text, ['بازار', 'فروشگاه', 'shop']) || $data == "shop"
         ]
     ]);
 
-    $theText = "🏪 **بازار شهر** — خوش آمدید لرد!";
+    $theText = "🏪 **به بازار شهر خوش آمدید لرد!**\n\nچه کالایی نیاز دارید؟";
     EditMessageText($chatId, $messageId, $theText, "Markdown", $keyboard);
 
     $conn->query("UPDATE `$citiesTable` SET `step`='shop_main' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
 
-// ==================== لیست آیتم‌ها ====================
+// ==================== نمایش لیست آیتم‌ها ====================
 else if ($data == "shop_buy" || $playerStep == "shop_buy") {
     $buttons = getShopBuyButtons($conn, $chat_id);
     $keyboard = json_encode(['inline_keyboard' => $buttons]);
@@ -25,7 +26,7 @@ else if ($data == "shop_buy" || $playerStep == "shop_buy") {
     $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_1' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
 
-// انتخاب آیتم
+// انتخاب آیتم از دکمه
 else if ($playerStep == "shop_buy_1" && strpos($data ?? '', 'buy_') === 0) {
     $itemName = str_replace('buy_', '', $data);
     $item = getShopItem($conn, $itemName);
@@ -45,7 +46,7 @@ else if ($playerStep == "shop_buy_1" && strpos($data ?? '', 'buy_') === 0) {
         $text .= "❌ <b>امکان خرید وجود ندارد:</b>\n" . $status['message'];
         $keyboard = json_encode([['inline_keyboard' => [[['text' => '🔙 بازگشت', 'callback_data' => 'shop_buy']]]]]);
     } else {
-        $text .= "🧮 چند واحد می‌خواهید بخرید؟";
+        $text .= "🧮 **چند واحد می‌خواهید بخرید؟**";
         $keyboard = $back;
         $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_2', `sendItem`='{$itemName}' WHERE `city id`='{$chat_id}' LIMIT 1");
     }
@@ -62,7 +63,12 @@ else if ($playerStep == "shop_buy_2" && is_numeric($text) && (int)$text > 0) {
     $status = checkShopItemStatus($conn, $chat_id, $item, $quantity);
 
     if (!$status['can_buy']) {
-        bot('sendMessage', ['chat_id' => $chat_id, 'text' => "❌ " . $status['message'], 'parse_mode' => 'HTML', 'reply_markup' => $back]);
+        bot('sendMessage', [
+            'chat_id' => $chat_id,
+            'text' => "❌ " . $status['message'],
+            'parse_mode' => 'HTML',
+            'reply_markup' => $back
+        ]);
         return;
     }
 
@@ -81,7 +87,7 @@ else if ($playerStep == "shop_buy_2" && is_numeric($text) && (int)$text > 0) {
     $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_3', `sendItemNum`='{$quantity}' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
 
-// تأیید نهایی
+// تأیید نهایی خرید
 else if ($playerStep == "shop_buy_3" && $text == "yes") {
     $itemName = $player['sendItem'];
     $qty = (int)$player['sendItemNum'];
