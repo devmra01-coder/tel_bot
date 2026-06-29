@@ -115,8 +115,54 @@ mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `shop_one_time_log` (
     `purchase_date` DATETIME NOT NULL,
     UNIQUE KEY `one_time_unique` (`city_id`, `item_name`)
 )");
+// ====================== سیستم خرید ======================
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `shop_items` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `item_name` VARCHAR(50) NOT NULL,
+    `persian_name` VARCHAR(100) NOT NULL,
+    `price_gold` INT DEFAULT 0,
+    `is_limited` TINYINT(1) DEFAULT 0,
+    `max_limit` INT DEFAULT 0,
+    `one_time` TINYINT(1) DEFAULT 0,
+    `daily_limit` INT DEFAULT 0,
+    `requirements` TEXT DEFAULT NULL,
+    `costs` TEXT NOT NULL,
+    `category` VARCHAR(30) DEFAULT 'resource',
+    `active` TINYINT(1) DEFAULT 1,
+    UNIQUE KEY `unique_item` (`item_name`)
+)");
 
-// --- جداول سیستم ارتقا ---
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `shop_daily_log` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `city_id` VARCHAR(50) NOT NULL,
+    `item_name` VARCHAR(50) NOT NULL,
+    `date` DATE NOT NULL,
+    `quantity` INT NOT NULL,
+    UNIQUE KEY `daily_unique` (`city_id`, `item_name`, `date`)
+)");
+
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `shop_one_time_log` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `city_id` VARCHAR(50) NOT NULL,
+    `item_name` VARCHAR(50) NOT NULL,
+    `purchase_date` DATETIME NOT NULL,
+    UNIQUE KEY `one_time_unique` (`city_id`, `item_name`)
+)");
+
+// ====================== سیستم ارتقا (جدا) ======================
+mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `upgrade_list` (
+    `id` INT AUTO_INCREMENT PRIMARY KEY,
+    `item_name` VARCHAR(50) NOT NULL,
+    `persian_name` VARCHAR(100) NOT NULL,
+    `category` VARCHAR(30) DEFAULT 'building',     -- building یا camp
+    `max_limit` INT DEFAULT 0,
+    `one_time` TINYINT(1) DEFAULT 0,
+    `daily_limit` INT DEFAULT 0,
+    `upgrade_costs` TEXT NOT NULL,                 -- JSON هزینه هر سطح
+    `active` TINYINT(1) DEFAULT 1,
+    UNIQUE KEY `unique_upgrade` (`item_name`)
+)");
+
 mysqli_query($conn, "CREATE TABLE IF NOT EXISTS `upgrade_daily_log` (
     `id` INT AUTO_INCREMENT PRIMARY KEY,
     `city_id` VARCHAR(50) NOT NULL,
