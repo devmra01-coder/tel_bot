@@ -119,19 +119,3 @@ else if ($theAdminStep == "upgrade_add_limits" && $text != "🔙") {
     $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
 }
 
-
-function showUpgradeCostSelection($conn, $chat_id, $targetItem, $level) {
-    $allItems = getAllGameItems($conn);
-    $keyboard = ['inline_keyboard' => []];
-    foreach ($allItems as $item) {
-        $keyboard['inline_keyboard'][] = [[
-            'text' => "💰 " . $item['persian'] . " (سطح $level)",
-            'callback_data' => "upgcost_{$level}_" . $item['english']
-        ]];
-    }
-    bot('sendMessage', [
-        'chat_id' => $chat_id,
-        'text' => "هزینه‌های سطح $level را انتخاب کنید:",
-        'reply_markup' => json_encode($keyboard)
-    ]);
-}
