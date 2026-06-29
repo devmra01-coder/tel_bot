@@ -3,14 +3,16 @@
 if ($text == "[🛒]- افزودن آیتم خرید" && $theAdminStep == "none") {
     $allItems = getAllGameItems($conn);
 
-    $keyboard = ['inline_keyboard' => []];
+    $keyboard = ['inline_keyboard' => [] ,
+    'resize_keyboard' => true,
+    'remove_keyboard' => true];
     foreach ($allItems as $item) {
         $keyboard['inline_keyboard'][] = [[
             'text' => $item['persian'] . " (" . $item['english'] . ")",
             'callback_data' => $item['english']
         ]];
     }
-    $keyboard['inline_keyboard'][] = [['text' => '🔙 بازگشت', 'callback_data' => '🔙']];
+    $keyboard['inline_keyboard'][] = [['text' => '🔙 بازگشت', 'callback_data' => '🔙'] ];
 
     bot('sendMessage', [
         'chat_id' => $chat_id,
