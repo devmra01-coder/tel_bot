@@ -90,7 +90,7 @@ function upgradeKeyboard($conn, $chat_id, $cityBuildingsTable, $buildingsTable, 
     if (empty(end($btns))) array_pop($btns);
 
     // افزودن دکمه برگشت
-    $btns[] = [['text' => "🔙", 'callback_data' => "back"]];
+    $btns[] = [['text' => "🔙", 'callback_data' => "Back"]];
     
     return $btns;
 }
