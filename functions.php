@@ -663,19 +663,21 @@ function showCostSelectionKeyboard($conn, $chat_id, $targetItem) {
             'callback_data' => "cost_" . $targetItem . "_" . $item['english']
         ]];
     }
-    $keyboard['inline_keyboard'][] = [['text' => "✅ تمام شد", 'callback_data' => "cost_done_" . $targetItem]];
+    $keyboard['inline_keyboard'][] = [['text' => "✅ تمام شد", 'callback_data' => "cost_done_" . $targetItem] ,
+    'resize_keyboard' => true,
+    'remove_keyboard' => true];
 
     bot('sendMessage', [
         'chat_id' => $chat_id,
         'text' => "انتخاب کنید کدام آیتم هزینه خرید باشد:",
         'reply_markup' => json_encode($keyboard)
-    ],
-    'resize_keyboard' => true,
-    'remove_keyboard' => true);
+    ]);
 }
 function showUpgradeCostSelection($conn, $chat_id, $targetItem, $level) {
     $allItems = getAllGameItems($conn);
-    $keyboard = ['inline_keyboard' => []];
+    $keyboard = ['inline_keyboard' => [] ,
+    'resize_keyboard' => true,
+    'remove_keyboard' => true];
     foreach ($allItems as $item) {
         $keyboard['inline_keyboard'][] = [[
             'text' => "💰 " . $item['persian'] . " (سطح $level)",
@@ -686,7 +688,5 @@ function showUpgradeCostSelection($conn, $chat_id, $targetItem, $level) {
         'chat_id' => $chat_id,
         'text' => "هزینه‌های سطح $level را انتخاب کنید:",
         'reply_markup' => json_encode($keyboard)
-    ],
-    'resize_keyboard' => true,
-    'remove_keyboard' => true);
+    ]);
 }
