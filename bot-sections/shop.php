@@ -1,9 +1,9 @@
 // ===============================================
-//                سیستم خرید بازار (کامل)
+//                سیستم خرید بازار (نهایی)
 // ===============================================
 
 // ==================== ورود به بازار ====================
-if ($text == "shoping") {
+if ($text == "shoping" || $data == "shoping") {
     $keyboard = json_encode([
         'inline_keyboard' => [
             [['text' => '🛒 خرید از بازار', 'callback_data' => 'shop_buy']],
@@ -26,7 +26,7 @@ else if ($data == "shop_buy" || $playerStep == "shop_buy") {
     $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_1' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
 
-// انتخاب آیتم از دکمه
+// انتخاب آیتم
 else if ($playerStep == "shop_buy_1" && strpos($data ?? '', 'buy_') === 0) {
     $itemName = str_replace('buy_', '', $data);
     $item = getShopItem($conn, $itemName);
@@ -87,7 +87,7 @@ else if ($playerStep == "shop_buy_2" && is_numeric($text) && (int)$text > 0) {
     $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_3', `sendItemNum`='{$quantity}' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
 
-// تأیید نهایی خرید
+// تأیید نهایی
 else if ($playerStep == "shop_buy_3" && $text == "yes") {
     $itemName = $player['sendItem'];
     $qty = (int)$player['sendItemNum'];
