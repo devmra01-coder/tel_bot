@@ -10,7 +10,7 @@ if ($text == "[🛒]- افزودن آیتم خرید" && $theAdminStep == "none"
             'callback_data' => "shopadd_" . $item['english']
         ]];
     }
-    $keyboard['inline_keyboard'][] = [['text' => '🔙 بازگشت', 'callback_data' => 'admin_back']];
+    $keyboard['inline_keyboard'][] = [['text' => '🔙 بازگشت', 'callback_data' => '🔙']];
 
     bot('sendMessage', [
         'chat_id' => $chat_id,
