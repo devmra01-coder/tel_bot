@@ -531,101 +531,54 @@ function logOneTimePurchase($conn, $city_id, $item_name) {
 }
 
 
+function getUpgradeButtons($conn) {
+    $q = mysqli_query($conn, "SELECT * FROM `upgrade_list` WHERE `active`=1");
+    $buttons = [];
+    while ($item = mysqli_fetch_assoc($q)) {
+        $buttons[] = [['text' => "⚒ " . $item['persian_name'], 'callback_data' => 'upgrade_' . $item['item_name']]];
+    }
+    $buttons[] = [['text' => '🔙 بازگشت', 'callback_data' => 'shoping']];
+    return $buttons;
+}
 
-
-function getUpgradeItem($conn, $name, $buildingsTable, $campsTable) {
-    $q = mysqli_query($conn, "SELECT * FROM `$buildingsTable` WHERE `persian name` = '{$name}' LIMIT 1");
-    if ($row = mysqli_fetch_assoc($q)) return $row;
-    
-    $q = mysqli_query($conn, "SELECT * FROM `$campsTable` WHERE `persian name` = '{$name}' LIMIT 1");
+function getUpgradeItem($conn, $itemName) {
+    $q = mysqli_query($conn, "SELECT * FROM `upgrade_list` WHERE `item_name` = '{$itemName}' LIMIT 1");
     return mysqli_fetch_assoc($q);
 }
 
-function getCurrentLevel($conn, $city_id, $name, $cityBuildingsTable, $cityCampsTable) {
+function getCurrentLevel($conn, $city_id, $itemName) {
     global $cityBuildingsTable, $cityCampsTable;
     $tables = [$cityBuildingsTable, $cityCampsTable];
     foreach ($tables as $table) {
-        $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$name` FROM `$table` WHERE `city id`='{$city_id}' LIMIT 1"));
-        if (!empty($row[$name])) {
-            $parts = explode("@", $row[$name]);
+        $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$itemName` FROM `$table` WHERE `city id`='{$city_id}' LIMIT 1"));
+        if (!empty($row[$itemName])) {
+            $parts = explode("@", $row[$itemName]);
             return (int)($parts[1] ?? 1);
         }
     }
     return 1;
 }
 
-function getUpgradeCosts($conn, $name, $nextLevel, $buildingsTable, $campsTable) {
-    $item = getUpgradeItem($conn, $name, $buildingsTable, $campsTable);
-    if (!$item || empty($item['upgrade_costs'])) {
-        // fallback پیش‌فرض
-        return ['gold' => 1000 * $nextLevel];
-    }
-
-    $allCosts = json_decode($item['upgrade_costs'], true);
-    
-    if (isset($allCosts[$nextLevel])) {
-        return $allCosts[$nextLevel];
-    }
-
-    // اگر هزینه سطح مورد نظر وجود نداشت، آخرین سطح موجود را برگرداند
-    ksort($allCosts);
-    $lastLevel = array_key_last($allCosts);
-    return $allCosts[$lastLevel] ?? ['gold' => 1000 * $nextLevel];
-}
-function executeUpgrade($conn, $city_id, $upgradeName, $nextLevel, 
-                        $cityBuildingsTable, $cityCampsTable, 
-                        $buildingsTable, $campsTable,
-                        $cityItemsTable, $cityPeopleTable, $citySoldiersTable) {
-
-    $costs = getUpgradeCosts($conn, $upgradeName, $nextLevel, $buildingsTable, $campsTable);
-
-    // کسر منابع
-    if (!deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTable, $citySoldiersTable)) {
-        return ['success' => false, 'message' => 'منابع کافی برای ارتقا وجود ندارد.'];
-    }
-
-    // اعمال ارتقا در جدول شهر
-    $tables = [$cityBuildingsTable, $cityCampsTable];
-    foreach ($tables as $table) {
-        $colCheck = mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '{$upgradeName}'");
-        if (mysqli_num_rows($colCheck) > 0) {
-            $current = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$upgradeName` FROM `$table` WHERE `city id`='{$city_id}' LIMIT 1"));
-            $parts = explode("@", $current[$upgradeName] ?? "{$upgradeName}@1");
-            $newValue = "{$parts[0]}@{$nextLevel}";
-            
-            mysqli_query($conn, "UPDATE `$table` SET `{$upgradeName}` = '{$newValue}' WHERE `city id`='{$city_id}' LIMIT 1");
-            return ['success' => true];
-        }
-    }
-
-    return ['success' => false, 'message' => 'خطا در ثبت ارتقا'];
-}
-
-function checkUpgradeStatus($conn, $city_id, $name, $item, $cityBuildingsTable, $cityCampsTable) {
+function checkUpgradeStatus($conn, $city_id, $item) {
     $status = ['can_upgrade' => true, 'message' => ''];
+    $current = getCurrentLevel($conn, $city_id, $item['item_name']);
 
-    $currentLevel = getCurrentLevel($conn, $city_id, $name, $cityBuildingsTable, $cityCampsTable);
-
-    // محدودیت کلی
-    if ($item['max_limit'] > 0 && $currentLevel >= $item['max_limit']) {
+    if ($item['max_limit'] > 0 && $current >= $item['max_limit']) {
         $status['can_upgrade'] = false;
-        $status['message'] = "این ساختمان به حداکثر سطح مجاز رسیده است.";
+        $status['message'] = "به حداکثر سطح رسیده است.";
         return $status;
     }
 
-    // ارتقا تک‌باره
-    if ($item['one_time'] == 1 && $currentLevel >= 1) {
+    if ($item['one_time'] == 1 && $current >= 1) {
         $status['can_upgrade'] = false;
         $status['message'] = "این مورد فقط یک بار قابل ارتقا است.";
         return $status;
     }
 
-    // محدودیت روزانه
     if ($item['daily_limit'] > 0) {
-        $daily = getDailyUpgrades($conn, $city_id, $name);
-        if ($daily >= $item['daily_limit']) {
+        if (getDailyUpgrades($conn, $city_id, $item['item_name']) >= $item['daily_limit']) {
             $status['can_upgrade'] = false;
-            $status['message'] = "محدودیت روزانه ارتقا این مورد تمام شده است.";
+            $status['message'] = "محدودیت روزانه ارتقا تمام شده است.";
             return $status;
         }
     }
@@ -633,16 +586,43 @@ function checkUpgradeStatus($conn, $city_id, $name, $item, $cityBuildingsTable, 
     return $status;
 }
 
-function getDailyUpgrades($conn, $city_id, $name) {
-    $today = date('Y-m-d');
-    $q = mysqli_query($conn, "SELECT COUNT(*) as count FROM `upgrade_daily_log` 
-                              WHERE `city_id`='{$city_id}' AND `item_name`='{$name}' AND `date`='{$today}'");
-    $row = mysqli_fetch_assoc($q);
-    return (int)$row['count'];
+function getUpgradeCosts($conn, $item, $nextLevel) {
+    $costsJson = json_decode($item['upgrade_costs'], true);
+    return $costsJson[$nextLevel] ?? $costsJson[array_key_last($costsJson)] ?? ['gold' => 1000];
 }
 
-function logUpgrade($conn, $city_id, $name) {
+function executeUpgrade($conn, $city_id, $item, $nextLevel) {
+    $costs = getUpgradeCosts($conn, $item, $nextLevel);
+
+    if (!deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTable, $citySoldiersTable)) {
+        return ['success' => false, 'message' => 'منابع کافی نیست.'];
+    }
+
+    // ثبت ارتقا
+    global $cityBuildingsTable, $cityCampsTable;
+    $tables = [$cityBuildingsTable, $cityCampsTable];
+    foreach ($tables as $table) {
+        if (mysqli_num_rows(mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '{$item['item_name']}'")) > 0) {
+            $newValue = "{$item['persian_name']}@{$nextLevel}";
+            mysqli_query($conn, "UPDATE `$table` SET `{$item['item_name']}` = '{$newValue}' WHERE `city id`='{$city_id}' LIMIT 1");
+            break;
+        }
+    }
+
+    if ($item['daily_limit'] > 0) logUpgrade($conn, $city_id, $item['item_name']);
+
+    return ['success' => true];
+}
+
+function getDailyUpgrades($conn, $city_id, $item_name) {
     $today = date('Y-m-d');
-    mysqli_query($conn, "INSERT INTO `upgrade_daily_log` (`city_id`, `item_name`, `date`) 
-                         VALUES ('{$city_id}', '{$name}', '{$today}')");
+    $q = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM `upgrade_daily_log` WHERE `city_id`='{$city_id}' AND `item_name`='{$item_name}' AND `date`='{$today}'");
+    $row = mysqli_fetch_assoc($q);
+    return (int)$row['cnt'];
+}
+
+function logUpgrade($conn, $city_id, $item_name) {
+    $today = date('Y-m-d');
+    mysqli_query($conn, "INSERT INTO `upgrade_daily_log` (`city_id`,`item_name`,`date`) VALUES ('{$city_id}','{$item_name}','{$today}') 
+                         ON DUPLICATE KEY UPDATE `date`=`date`");
 }
