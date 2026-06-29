@@ -2,6 +2,8 @@
 
 if (in_array($from_id, $admins)) {
     if ($text == "پنل" || $text == "🔙" || $text == "admin_back") {
+        
+        $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}'LIMIT 1");
         bot('sendMessage', [
             'chat_id' => $chat_id,
             'text' => "👤|به پنل ادمین خوش آمدید",
