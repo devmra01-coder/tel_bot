@@ -669,7 +669,9 @@ function showCostSelectionKeyboard($conn, $chat_id, $targetItem) {
         'chat_id' => $chat_id,
         'text' => "انتخاب کنید کدام آیتم هزینه خرید باشد:",
         'reply_markup' => json_encode($keyboard)
-    ]);
+    ],
+    'resize_keyboard' => true,
+    'remove_keyboard' => true);
 }
 function showUpgradeCostSelection($conn, $chat_id, $targetItem, $level) {
     $allItems = getAllGameItems($conn);
@@ -684,5 +686,7 @@ function showUpgradeCostSelection($conn, $chat_id, $targetItem, $level) {
         'chat_id' => $chat_id,
         'text' => "هزینه‌های سطح $level را انتخاب کنید:",
         'reply_markup' => json_encode($keyboard)
-    ]);
+    ],
+    'resize_keyboard' => true,
+    'remove_keyboard' => true);
 }
