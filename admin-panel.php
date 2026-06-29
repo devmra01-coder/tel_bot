@@ -130,5 +130,11 @@ if (in_array($from_id, $admins)) {
     //----------
     include './admin-panel-forms/add-camp.php';
     include './admin-panel-forms/delete-camp.php';
+    //----------  
+    include './admin-panel-forms/add-shop.php';
+    // include './admin-panel-forms/delete-shop.php';
     //----------   
+    include './admin-panel-forms/add-upgrade.php';
+    // include './admin-panel-forms/delete-upgrade.php';
+    //----------  
 }
