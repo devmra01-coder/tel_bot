@@ -282,3 +282,250 @@ function itemsPersianNames($conn, $itemsTable, $peopleTable, $soldiersTable, $en
         return "«" . $soldier["persian name"] . "»";
     }
 }
+
+
+
+
+function getShopItem($conn, $itemName) {
+    $q = mysqli_query($conn, "SELECT * FROM `shop_items` WHERE `item_name` = '$itemName' AND `active`=1 LIMIT 1");
+    return mysqli_fetch_assoc($q);
+}
+
+function getShopBuyButtons($conn, $city_id) {
+    $q = mysqli_query($conn, "SELECT * FROM `shop_items` WHERE `active`=1 ORDER BY category");
+    $buttons = [];
+    while ($item = mysqli_fetch_assoc($q)) {
+        $status = checkShopItemStatus($conn, $city_id, $item);
+        $emoji = $status['can_buy'] ? '🟢' : '❌';
+        $buttons[] = [['text' => $emoji . " " . $item['persian_name'], 'callback_data' => 'buy_' . $item['item_name']]];
+    }
+    $buttons[] = [['text' => '🔙 بازگشت', 'callback_data' => 'shop']];
+    return $buttons;
+}
+
+function checkShopItemStatus($conn, $city_id, $item, $requestedQty = 1) {
+    $status = ['can_buy' => true, 'message' => ''];
+
+    if ($item['one_time'] == 1 && getOneTimePurchaseStatus($conn, $city_id, $item['item_name'])) {
+        $status['can_buy'] = false;
+        $status['message'] = "این آیتم فقط یک بار قابل خرید است.";
+        return $status;
+    }
+
+    if ($item['is_limited'] && $item['max_limit'] > 0) {
+        $owned = getCityItemTotal($conn, $city_id, $item['item_name']);
+        if ($owned + $requestedQty > $item['max_limit']) {
+            $status['can_buy'] = false;
+            $status['message'] = "حداکثر {$item['max_limit']} واحد قابل خرید است.";
+            return $status;
+        }
+    }
+
+    if ($item['daily_limit'] > 0) {
+        $daily = getDailyBought($conn, $city_id, $item['item_name']);
+        if ($daily + $requestedQty > $item['daily_limit']) {
+            $status['can_buy'] = false;
+            $status['message'] = "محدودیت روزانه این آیتم تمام شده است.";
+            return $status;
+        }
+    }
+
+    if (!empty($item['requirements'])) {
+        $reqs = json_decode($item['requirements'], true);
+        foreach ($reqs as $reqItem => $reqQty) {
+            if (getCityItemTotal($conn, $city_id, $reqItem) < $reqQty) {
+                $status['can_buy'] = false;
+                $status['message'] = "پیش‌نیازها کامل نیست.";
+                return $status;
+            }
+        }
+    }
+
+    return $status;
+}
+
+function getOneTimePurchaseStatus($conn, $city_id, $item_name) {
+    $q = mysqli_query($conn, "SELECT 1 FROM `shop_one_time_log` WHERE `city_id`='{$city_id}' AND `item_name`='{$item_name}' LIMIT 1");
+    return mysqli_num_rows($q) > 0;
+}
+
+function getDailyBought($conn, $city_id, $item_name) {
+    $today = date('Y-m-d');
+    $q = mysqli_query($conn, "SELECT SUM(quantity) as total FROM `shop_daily_log` 
+                              WHERE `city_id`='{$city_id}' AND `item_name`='{$item_name}' AND `date`='{$today}'");
+    $row = mysqli_fetch_assoc($q);
+    return (int)($row['total'] ?? 0);
+}
+
+function getCityItemTotal($conn, $city_id, $item_name) {
+    global $cityItemsTable, $cityPeopleTable, $citySoldiersTable, $cityBuildingsTable, $cityCampsTable;
+    $tables = [$cityItemsTable, $cityPeopleTable, $citySoldiersTable, $cityBuildingsTable, $cityCampsTable];
+    
+    foreach ($tables as $table) {
+        $col = mysqli_query($conn, "SHOW COLUMNS FROM `{$table}` LIKE '{$item_name}'");
+        if (mysqli_num_rows($col) > 0) {
+            $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `{$item_name}` FROM `{$table}` WHERE `city id`='{$city_id}' LIMIT 1"));
+            $parts = explode("@", $row[$item_name] ?? "0@0");
+            return (int)($parts[1] ?? 0);
+        }
+    }
+    return 0;
+}
+
+function calculateTotalCost($item, $quantity) {
+    $costs = json_decode($item['costs'], true) ?? [];
+    $total = ['gold' => ($item['price_gold'] ?? 0) * $quantity];
+    foreach ($costs as $res => $amt) {
+        $total[$res] = ($total[$res] ?? 0) + $amt * $quantity;
+    }
+    return $total;
+}
+
+function formatCosts($costs) {
+    $str = "";
+    if (!empty($costs['gold'])) $str .= "💰 {$costs['gold']} سکه\n";
+    foreach ($costs as $res => $amt) {
+        if ($res !== 'gold' && $amt > 0) $str .= "• {$res}: {$amt}\n";
+    }
+    return $str ?: "بدون هزینه اضافی";
+}
+
+function executePurchase($conn, $city_id, $item, $quantity, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable) {
+    $status = checkShopItemStatus($conn, $city_id, $item, $quantity);
+    if (!$status['can_buy']) {
+        return ['success' => false, 'message' => $status['message']];
+    }
+
+    $totalCost = calculateTotalCost($item, $quantity);
+
+    if (!deductAllCosts($conn, $city_id, $totalCost, $cityItemsTable, $cityPeopleTable, $citySoldiersTable)) {
+        return ['success' => false, 'message' => 'منابع کافی برای پرداخت هزینه‌ها وجود ندارد.'];
+    }
+
+    addItemToCity($conn, $city_id, $item['item_name'], $quantity, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable);
+
+    if ($item['daily_limit'] > 0) {
+        logDailyPurchase($conn, $city_id, $item['item_name'], $quantity);
+    }
+    if ($item['one_time'] == 1) {
+        logOneTimePurchase($conn, $city_id, $item['item_name']);
+    }
+
+    return ['success' => true];
+}
+
+// ===============================================
+//     توابع کمکی خرید - کامل و هماهنگ با کد شما
+// ===============================================
+
+function deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTable, $citySoldiersTable)
+{
+    // $costs مثلاً: ['gold' => 500, 'wood' => 200, 'stone' => 150, ...]
+
+    foreach ($costs as $itemName => $amount) {
+        if ($amount <= 0) continue;
+
+        $table = "";
+        $currentData = "";
+
+        // پیدا کردن جدول مربوطه
+        $checkItem = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$itemName` FROM `$cityItemsTable` WHERE `city id` = '{$city_id}' LIMIT 1"));
+        $checkPeople = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$itemName` FROM `$cityPeopleTable` WHERE `city id` = '{$city_id}' LIMIT 1"));
+        $checkSoldiers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$itemName` FROM `$citySoldiersTable` WHERE `city id` = '{$city_id}' LIMIT 1"));
+
+        if (!empty($checkItem[$itemName])) {
+            $table = $cityItemsTable;
+            $currentData = $checkItem[$itemName];
+        } elseif (!empty($checkPeople[$itemName])) {
+            $table = $cityPeopleTable;
+            $currentData = $checkPeople[$itemName];
+        } elseif (!empty($checkSoldiers[$itemName])) {
+            $table = $citySoldiersTable;
+            $currentData = $checkSoldiers[$itemName];
+        } else {
+            return false; // منبع پیدا نشد
+        }
+
+        // پردازش مقدار فعلی (فرمت: name@quantity)
+        $parts = explode("@", $currentData);
+        $persian = $parts[0] ?? $itemName;
+        $currentQty = (int)($parts[1] ?? 0);
+
+        if ($currentQty < $amount) {
+            return false; // موجودی کافی نیست
+        }
+
+        $newQty = $currentQty - $amount;
+        $newValue = "{$persian}@{$newQty}";
+
+        $conn->query("UPDATE `{$table}` SET `{$itemName}` = '{$newValue}' WHERE `city id` = '{$city_id}' LIMIT 1");
+    }
+
+    return true;
+}
+
+// ===============================================
+
+function addItemToCity($conn, $city_id, $item_name, $quantity, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable)
+{
+    $tables = [$cityItemsTable, $cityPeopleTable, $citySoldiersTable, $cityBuildingsTable, $cityCampsTable];
+    $targetTable = "";
+    $currentData = "";
+
+    foreach ($tables as $table) {
+        $result = mysqli_query($conn, "SHOW COLUMNS FROM `{$table}` LIKE '{$item_name}'");
+        if (mysqli_num_rows($result) > 0) {
+            $targetTable = $table;
+            $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `{$item_name}` FROM `{$table}` WHERE `city id` = '{$city_id}' LIMIT 1"));
+            $currentData = $row[$item_name] ?? "";
+            break;
+        }
+    }
+
+    if (empty($targetTable)) {
+        return false; // جدول پیدا نشد
+    }
+
+    if (empty($currentData)) {
+        // اولین بار اضافه می‌شود
+        $persianName = getPersianName($conn, $item_name);
+        $newValue = "{$persianName}@{$quantity}";
+    } else {
+        // افزایش مقدار موجود
+        $parts = explode("@", $currentData);
+        $persian = $parts[0] ?? $item_name;
+        $currentQty = (int)($parts[1] ?? 0);
+        $newQty = $currentQty + $quantity;
+        $newValue = "{$persian}@{$newQty}";
+    }
+
+    $conn->query("UPDATE `{$targetTable}` SET `{$item_name}` = '{$newValue}' WHERE `city id` = '{$city_id}' LIMIT 1");
+    return true;
+}
+
+// تابع کمکی برای گرفتن نام فارسی (در صورت نیاز)
+function getPersianName($conn, $englishName)
+{
+    $tables = ['itemsTable', 'peopleTable', 'soldiersTable', 'buildingsTable', 'campsTable'];
+    foreach ($tables as $tableVar) {
+        global $$tableVar;
+        $table = $$tableVar;
+        $q = mysqli_query($conn, "SELECT `persian name` FROM `{$table}` WHERE `english name` = '{$englishName}' LIMIT 1");
+        if ($row = mysqli_fetch_assoc($q)) {
+            return $row['persian name'];
+        }
+    }
+    return $englishName; // fallback
+}
+
+function logDailyPurchase($conn, $city_id, $item_name, $quantity) {
+    $today = date('Y-m-d');
+    mysqli_query($conn, "INSERT INTO `shop_daily_log` (`city_id`, `item_name`, `date`, `quantity`) 
+                         VALUES ('$city_id', '$item_name', '$today', $quantity) 
+                         ON DUPLICATE KEY UPDATE `quantity` = `quantity` + $quantity");
+}
+
+function logOneTimePurchase($conn, $city_id, $item_name) {
+    mysqli_query($conn, "INSERT INTO `shop_one_time_log` (`city_id`, `item_name`, `purchase_date`) 
+                         VALUES ('$city_id', '$item_name', NOW())");
+}
