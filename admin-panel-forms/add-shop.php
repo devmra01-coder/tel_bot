@@ -15,7 +15,8 @@ if ($text == "[🛒]- افزودن آیتم خرید" && $theAdminStep == "none"
     bot('sendMessage', [
         'chat_id' => $chat_id,
         'text' => "📋 **انتخاب آیتم برای افزودن به فروشگاه خرید:**",
-        'parse_mode' => "HTML",
+        'parse_mode' => "HTML", 
+        'reply_to_message_id' => $message_id, 
         'reply_markup' => json_encode($keyboard)
     ]);
 
