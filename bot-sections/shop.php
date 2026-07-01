@@ -8,7 +8,7 @@ if ($text == "shoping" || $data == "shoping") {
     $keyboard = json_encode([
         'inline_keyboard' => [
             [['text' => '🛒 خرید ', 'callback_data' => 'shop_buy']],
-            [['text' => '⚒ ارتقای ', 'callback_data' => 'upgrade_menu']],
+            [['text' => '⚒ ارتقا ', 'callback_data' => 'upgrade_menu']],
             [['text' => '🔙 بازگشت', 'callback_data' => 'back']]
         ]
     ]);
