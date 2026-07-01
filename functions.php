@@ -302,26 +302,25 @@ function getShopBuyButtons($conn, $city_id) {
     $buttons[] = [['text' => '🔙 بازگشت', 'callback_data' => 'shoping']];
     return $buttons;
 }
-// محاسبه هزینه کل (فقط بر اساس costs که ادمین وارد کرده)
+
 function calculateTotalCost($item, $quantity) {
     if (!$item) return [];
-
-    $costs = json_decode($item['costs'], true) ?? [];
+    $costs = json_decode($item['costs'] ?? '{}', true) ?? [];
     $total = [];
-
     foreach ($costs as $res => $amt) {
         $total[$res] = ($total[$res] ?? 0) + (int)$amt * $quantity;
     }
     return $total;
 }
 
-// نمایش هزینه‌ها
 function formatCosts($costs) {
     if (empty($costs)) return "بدون هزینه";
 
     $str = "";
     foreach ($costs as $res => $amt) {
-        $str .= "• {$res}: {$amt}\n";
+        if ($amt > 0) {
+            $str .= "• {$res}: {$amt}\n";
+        }
     }
     return $str;
 }
