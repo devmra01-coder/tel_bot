@@ -97,7 +97,7 @@ else if ($playerStep == "shop_buy_1" && $data) {
     $item = getShopItem($conn, $itemName);
 
     if (!$item) {
-        bot('answerCallbackQuery', [
+        bot('sendMessage', [
             'callback_query_id' => $callback_id ?? '',
             'text' => "❌ آیتم یافت نشد",
             'show_alert' => true
