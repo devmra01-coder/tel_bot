@@ -103,7 +103,7 @@ else if ($playerStep == "shop_buy_1" && $data) {
 
     $status = checkShopItemStatus($conn, $chat_id, $item);
     $text = "📦 <b>" . ($item['persian_name'] ?? $itemName) . "</b>\n\n";
-    $text .= getCostsText($item['costs'] ?? '{}') . "\n\n";
+    $text .= formatCosts($item['costs'] ?? '{}') . "\n\n";
 
     if (!$status['can_buy']) {
         $text .= "❌ امکان خرید وجود ندارد:\n" . $status['message'];
