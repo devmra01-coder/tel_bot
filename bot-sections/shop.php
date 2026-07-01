@@ -91,15 +91,9 @@ else if ($data == "shop_buy" || $playerStep == "shop_buy") {
     $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_1' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
 
-// انتخاب آیتم (اصلاح شده و قوی)
-else if (strpos($data ?? '', 'buy_') === 0) {
-    // همیشه answerCallbackQuery را بده
-    bot('answerCallbackQuery', [
-        'callback_query_id' => $callback_id ?? '',
-        'text' => "در حال بارگذاری...",
-    ]);
-
-    $itemName = str_replace('buy_', '', $data);
+// انتخاب آیتم از دکمه (اصلاح شده)
+else if ($playerStep == "shop_buy_1" && $data) {
+    $itemName = $data;
     $item = getShopItem($conn, $itemName);
 
     if (!$item) {
