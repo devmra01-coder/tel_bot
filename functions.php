@@ -417,7 +417,14 @@ function executePurchase($conn, $city_id, $item, $quantity, $cityItemsTable, $ci
 // ===============================================
 //     توابع کمکی خرید - کامل و هماهنگ با کد شما
 // ===============================================
-
+function getCostsText($costsJson) {
+    $costs = json_decode($costsJson, true) ?? [];
+    $text = "";
+    foreach ($costs as $item => $amount) {
+        $text .= "• {$item}: {$amount}\n";
+    }
+    return $text ?: "بدون هزینه اضافی";
+}
 function deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTable, $citySoldiersTable)
 {
     // $costs مثلاً: ['gold' => 500, 'wood' => 200, 'stone' => 150, ...]
