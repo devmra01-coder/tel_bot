@@ -2,59 +2,56 @@
 // ===============================================
 //            پنل ادمین — افزودن خرید و ارتقا
 // ===============================================
-
 // ==================== افزودن به فروشگاه خرید ====================
 if ($text == "[🛒]- افزودن آیتم خرید" && $theAdminStep == "none") {
     bot('sendMessage', [
         'chat_id' => $chat_id,
-        'text' => "📌 نام انگلیسی آیتم را وارد کنید (مثال: wood، soldier، factory):\n\nاز آیتم‌های موجود در دیتابیس استفاده کنید.",
+        'text' => "📌 نام انگلیسی آیتم را وارد کنید (مثال: wood، soldier، factory):",
         'parse_mode' => "HTML",
         'reply_markup' => $adminBack,
     ]);
     $conn->query("UPDATE `$adminsTable` SET `step`='add_shop_1' WHERE `id`='{$from_id}' LIMIT 1");
 }
 
-// مرحله ۱: نام انگلیسی
+// مرحله ۱: نام انگلیسی + ایجاد رکورد اولیه
 else if ($theAdminStep == "add_shop_1" && $text != "🔙") {
     $enName = trim($text);
+    
+    // ایجاد رکورد اولیه با مقادیر پیش‌فرض
+    $conn->query("INSERT INTO `shop_items` (`item_name`, `persian_name`, `costs`, `max_limit`, `daily_limit`, `one_time`) 
+                  VALUES ('{$enName}', '{$enName}', '{}', 0, 0, 0)
+                  ON DUPLICATE KEY UPDATE `item_name`='{$enName}'");
+
     bot('sendMessage', [
         'chat_id' => $chat_id,
-        'text' => "📌 هزینه خرید این آیتم را به فرمت JSON وارد کنید:\n\nمثال:\n<code>{\"gold\":150, \"wood\":40, \"stone\":25}</code>",
+        'text' => "✅ آیتم ایجاد شد.\n\n📌 حالا هزینه خرید را به فرمت JSON وارد کنید:\n\nمثال:\n<code>{\"gold\":150, \"wood\":40}</code>",
         'parse_mode' => "HTML",
         'reply_markup' => $adminBack,
     ]);
+
     $conn->query("UPDATE `$adminsTable` SET `step`='add_shop_2', `thing`='{$enName}' WHERE `id`='{$from_id}' LIMIT 1");
 }
 
-// مرحله ۲: هزینه‌ها
+// مرحله ۲: هزینه + ذخیره مستقیم
 else if ($theAdminStep == "add_shop_2" && $text != "🔙") {
     $enName = $getAdmins['thing'];
+
+    $conn->query("UPDATE `shop_items` SET `costs`='{$text}' WHERE `item_name`='{$enName}' LIMIT 1");
+
     bot('sendMessage', [
         'chat_id' => $chat_id,
-        'text' => "📌 محدودیت‌ها را وارد کنید (هر خط یکی):\nmax_limit=0\ndaily_limit=0\none_time=0\n\n(۰ یعنی بدون محدودیت)",
+        'text' => "✅ هزینه ثبت شد.\n\n📌 حالا محدودیت‌ها را وارد کنید (هر خط یکی):\nmax_limit=0\ndaily_limit=0\none_time=0",
         'parse_mode' => "HTML",
         'reply_markup' => $adminBack,
     ]);
-    $conn->query("UPDATE `$adminsTable` SET `step`='add_shop_3', `temp_data`='{$text}' WHERE `id`='{$from_id}' LIMIT 1");
+
+    $conn->query("UPDATE `$adminsTable` SET `step`='add_shop_3' WHERE `id`='{$from_id}' LIMIT 1");
 }
 
-// مرحله وارد کردن محدودیت‌ها
+// مرحله ۳: محدودیت‌ها + اتمام
 else if ($theAdminStep == "add_shop_3" && $text != "🔙") {
-    $adminData = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$adminsTable` WHERE `id`='{$from_id}' LIMIT 1"));
-    $enName = $adminData['thing'] ?? '';
-    $costs  = $adminData['temp_data'] ?? '{}';
+    $enName = $getAdmins['thing'];
 
-    if (empty($enName)) {
-        bot('sendMessage', [
-            'chat_id' => $chat_id,
-            'text' => "❌ خطا: نام آیتم پیدا نشد. دوباره از اول شروع کنید.",
-            'parse_mode' => "HTML",
-        ]);
-        $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
-        return;
-    }
-
-    // پردازش محدودیت‌ها
     $max_limit = 0;
     $daily_limit = 0;
     $one_time = 0;
@@ -71,33 +68,20 @@ else if ($theAdminStep == "add_shop_3" && $text != "🔙") {
         }
     }
 
-    // ذخیره نهایی
-    $conn->query("INSERT INTO `shop_items` (`item_name`, `persian_name`, `costs`, `max_limit`, `daily_limit`, `one_time`) 
-                  VALUES (
-                    '{$enName}', 
-                    COALESCE((SELECT `persian name` FROM `$itemsTable` WHERE `english name`='{$enName}' LIMIT 1),
-                             (SELECT `persian name` FROM `$peopleTable` WHERE `english name`='{$enName}' LIMIT 1),
-                             (SELECT `persian name` FROM `$soldiersTable` WHERE `english name`='{$enName}' LIMIT 1),
-                             '{$enName}'),
-                    '{$costs}',
-                    {$max_limit},
-                    {$daily_limit},
-                    {$one_time}
-                  ) 
-                  ON DUPLICATE KEY UPDATE 
-                    `costs` = '{$costs}',
+    $conn->query("UPDATE `shop_items` SET 
                     `max_limit` = {$max_limit},
                     `daily_limit` = {$daily_limit},
-                    `one_time` = {$one_time}");
+                    `one_time` = {$one_time}
+                  WHERE `item_name`='{$enName}' LIMIT 1");
 
     bot('sendMessage', [
         'chat_id' => $chat_id,
-        'text' => "✅ آیتم خرید با موفقیت اضافه/بروزرسانی شد!\n\nمحدودیت‌ها اعمال شد.",
+        'text' => "🎉 آیتم خرید با موفقیت کامل شد و ذخیره گردید!",
         'parse_mode' => "HTML",
         'reply_markup' => $adminBack,
     ]);
 
-    $conn->query("UPDATE `$adminsTable` SET `step`='none', `temp_data`='', `thing`='' WHERE `id`='{$from_id}' LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='none', `thing`='' WHERE `id`='{$from_id}' LIMIT 1");
 }
 
 // ==================== افزودن به سیستم ارتقا ====================
