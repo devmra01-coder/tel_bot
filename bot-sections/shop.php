@@ -149,32 +149,48 @@ else if (strpos($playerStep, "shop_buy_2@") !== false && is_numeric($text) && (i
     $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_3@{$itemName}@{$quantity}' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
 
-// تأیید نهایی
-else if (strpos($playerStep, "shop_buy_3@") !== false && $text == "yes") {
+    // تأیید نهایی خرید
+else if (strpos($playerStep, "shop_buy_3@") !== false) {
     $parts = explode("@", $playerStep);
     $itemName = $parts[1] ?? '';
     $qty = (int)($parts[2] ?? 0);
 
-    $item = getShopItem($conn, $itemName);
-    if (!$item) {
-        bot('sendMessage', ['chat_id' => $chat_id, 'text' => "❌ آیتم یافت نشد."]);
-        return;
-    }
+    if ($text == "yes") {
+        $item = getShopItem($conn, $itemName);
+        if (!$item) {
+            bot('EditMessageText', [
+                'chat_id' => $chat_id,
+                'message_id' => $message_id,
+                'text' => "❌ آیتم یافت نشد.",
+                'parse_mode' => 'HTML'
+            ]);
+            $conn->query("UPDATE `$citiesTable` SET `step`='none' WHERE `city id`='{$chat_id}' LIMIT 1");
+            return;
+        }
 
-    $result = executePurchase($conn, $chat_id, $item, $qty, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable);
+        $result = executePurchase($conn, $chat_id, $item, $qty, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable);
 
-    if ($result['success']) {
+        if ($result['success']) {
+            bot('EditMessageText', [
+                'chat_id' => $chat_id,
+                'message_id' => $message_id,
+                'text' => "🎉 خرید با موفقیت انجام شد!\n{$qty} واحد " . ($item['persian_name'] ?? $itemName) . " به انبار اضافه شد.",
+                'parse_mode' => 'HTML'
+            ]);
+        } else {
+            bot('EditMessageText', [
+                'chat_id' => $chat_id,
+                'message_id' => $message_id,
+                'text' => "❌ " . ($result['message'] ?? 'خطای ناشناخته'),
+                'parse_mode' => 'HTML'
+            ]);
+        }
+    } 
+    else if ($text == "no") {
         bot('EditMessageText', [
             'chat_id' => $chat_id,
             'message_id' => $message_id,
-            'text' => "🎉 خرید با موفقیت انجام شد!\n{$qty} واحد " . ($item['persian_name'] ?? $itemName) . " به انبار اضافه شد.",
-            'parse_mode' => 'HTML'
-        ]);
-    } else {
-        bot('EditMessageText', [
-            'chat_id' => $chat_id,
-            'message_id' => $message_id,
-            'text' => "❌ " . ($result['message'] ?? 'خطای ناشناخته'),
+            'text' => "❌ خرید لغو شد.",
             'parse_mode' => 'HTML'
         ]);
     }
