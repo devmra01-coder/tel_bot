@@ -314,15 +314,16 @@ function calculateTotalCost($item, $quantity) {
 }
 
 function formatCosts($costs) {
-    if (empty($costs)) return "بدون هزینه";
+    $costsArray = is_string($costs) ? json_decode($costs, true) : $costs;
+    if (empty($costsArray)) return "بدون هزینه";
 
     $str = "";
-    foreach ($costs as $res => $amt) {
+    foreach ($costsArray as $res => $amt) {
         if ($amt > 0) {
             $str .= "• {$res}: {$amt}\n";
         }
     }
-    return $str;
+    return $str ?: "بدون هزینه";
 }
 
 function checkShopItemStatus($conn, $city_id, $item, $requestedQty = 1) {
