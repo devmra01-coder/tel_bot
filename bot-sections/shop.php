@@ -83,6 +83,7 @@ else if ($playerStep == "Shop_upgrade_2" && $text == "yes") {
 }
     
 // ==================== نمایش لیست آیتم‌ها ====================
+// ==================== نمایش لیست آیتم‌ها ====================
 else if ($data == "shop_buy" || $playerStep == "shop_buy") {
     $buttons = getShopBuyButtons($conn, $chat_id);
     $keyboard = json_encode(['inline_keyboard' => $buttons]);
@@ -91,24 +92,30 @@ else if ($data == "shop_buy" || $playerStep == "shop_buy") {
     $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_1' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
 
-// انتخاب آیتم
-else if ($playerStep == "shop_buy_1" && strpos($data ?? '', 'buy_') === 0) {
+// انتخاب آیتم از دکمه (اصلاح شده)
+else if (($playerStep == "shop_buy_1" || strpos($data ?? '', 'buy_') === 0) && strpos($data ?? '', 'buy_') === 0) {
     $itemName = str_replace('buy_', '', $data);
     $item = getShopItem($conn, $itemName);
 
     if (!$item) {
-        bot('answerCallbackQuery', ['callback_query_id' => $callback_id ?? '', 'text' => "❌ آیتم یافت نشد", 'show_alert' => true]);
+        bot('answerCallbackQuery', [
+            'callback_query_id' => $callback_id ?? '',
+            'text' => "❌ آیتم یافت نشد",
+            'show_alert' => true
+        ]);
         return;
     }
 
     $status = checkShopItemStatus($conn, $chat_id, $item);
     $text = "📦 <b>{$item['persian_name']}</b>\n\n";
 
-    if ($item['price_gold'] > 0) $text .= "💰 سکه: {$item['price_gold']}\n";
-    $text .= getCostsText($item['costs']) . "\n\n";
+    if (!empty($item['price_gold']) && $item['price_gold'] > 0) {
+        $text .= "💰 سکه: {$item['price_gold']}\n";
+    }
+    $text .= getCostsText($item['costs'] ?? '{}') . "\n\n";
 
     if (!$status['can_buy']) {
-        $text .= "❌ <b>امکان خرید وجود ندارد:</b>\n" . $status['message'];
+        $text .= "❌ امکان خرید وجود ندارد:\n" . $status['message'];
         $keyboard = json_encode([['inline_keyboard' => [[['text' => '🔙 بازگشت', 'callback_data' => 'shop_buy']]]]]);
     } else {
         $text .= "🧮 **چند واحد می‌خواهید بخرید؟**";
