@@ -36,18 +36,53 @@ else if ($theAdminStep == "add_shop_2" && $text != "🔙") {
         'reply_markup' => $adminBack,
     ]);
     $conn->query("UPDATE `$adminsTable` SET `step`='add_shop_3', `temp_data`='{$text}' WHERE `id`='{$from_id}' LIMIT 1");
-    $conn->query("INSERT INTO `shop_items` (`item_name`, `costs`) VALUES ('{$enName}', '{$text}') ON DUPLICATE KEY UPDATE `costs`='{$text}'");
 }
 
-// مرحله ۳: محدودیت و ذخیره
+// مرحله وارد کردن محدودیت‌ها
 else if ($theAdminStep == "add_shop_3" && $text != "🔙") {
+    $enName = $getAdmins['thing'];
+    $costs = $getAdmins['temp_data'] ?? '{}';
+
+    // پردازش محدودیت‌ها
+    $max_limit = 0;
+    $daily_limit = 0;
+    $one_time = 0;
+
+    $lines = explode("\n", $text);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (strpos($line, 'max_limit=') !== false) {
+            $max_limit = (int)str_replace('max_limit=', '', $line);
+        } elseif (strpos($line, 'daily_limit=') !== false) {
+            $daily_limit = (int)str_replace('daily_limit=', '', $line);
+        } elseif (strpos($line, 'one_time=') !== false) {
+            $one_time = (int)str_replace('one_time=', '', $line);
+        }
+    }
+
+    $conn->query("INSERT INTO `shop_items` (`item_name`, `persian_name`, `costs`, `max_limit`, `daily_limit`, `one_time`) 
+                  VALUES (
+                    '{$enName}', 
+                    (SELECT `persian name` FROM `$itemsTable` WHERE `english name`='{$enName}' LIMIT 1),
+                    '{$costs}',
+                    {$max_limit},
+                    {$daily_limit},
+                    {$one_time}
+                  ) 
+                  ON DUPLICATE KEY UPDATE 
+                    `costs`='{$costs}', 
+                    `max_limit`={$max_limit}, 
+                    `daily_limit`={$daily_limit}, 
+                    `one_time`={$one_time}");
+
     bot('sendMessage', [
         'chat_id' => $chat_id,
-        'text' => "✅ آیتم خرید با موفقیت اضافه شد!",
+        'text' => "✅ آیتم خرید با موفقیت اضافه شد!\n\nمحدودیت‌ها اعمال شد.",
         'parse_mode' => "HTML",
         'reply_markup' => $adminBack,
     ]);
-    $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
+
+    $conn->query("UPDATE `$adminsTable` SET `step`='none', `temp_data`='', `thing`='' WHERE `id`='{$from_id}' LIMIT 1");
 }
 
 // ==================== افزودن به سیستم ارتقا ====================
