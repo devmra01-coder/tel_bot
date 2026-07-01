@@ -382,7 +382,9 @@ function executePurchase($conn, $city_id, $item, $quantity, $cityItemsTable, $ci
         return ['success' => false, 'message' => 'منابع کافی برای پرداخت هزینه‌ها وجود ندارد.'];
     }
 
-    addItemToCity($conn, $city_id, $item['item_name'], $quantity, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable);
+    if (!addItemToCity($conn, $city_id, $item['item_name'], $quantity, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable)) {
+        return ['success' => false, 'message' => 'خطا در اضافه کردن آیتم به انبار.'];
+    }
 
     if (!empty($item['daily_limit']) && $item['daily_limit'] > 0) {
         logDailyPurchase($conn, $city_id, $item['item_name'], $quantity);
@@ -393,7 +395,6 @@ function executePurchase($conn, $city_id, $item, $quantity, $cityItemsTable, $ci
 
     return ['success' => true];
 }
-
 // ===============================================
 // محاسبه هزینه کل
 // ===============================================
@@ -447,32 +448,28 @@ function deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTab
     foreach ($costs as $itemName => $amount) {
         if ($amount <= 0) continue;
 
-        $table = "";
+        $table = null;
         $currentData = "";
 
-        $checkItem = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$itemName` FROM `$cityItemsTable` WHERE `city id` = '{$city_id}' LIMIT 1"));
-        $checkPeople = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$itemName` FROM `$cityPeopleTable` WHERE `city id` = '{$city_id}' LIMIT 1"));
-        $checkSoldiers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$itemName` FROM `$citySoldiersTable` WHERE `city id` = '{$city_id}' LIMIT 1"));
-
-        if (!empty($checkItem[$itemName])) {
-            $table = $cityItemsTable;
-            $currentData = $checkItem[$itemName];
-        } elseif (!empty($checkPeople[$itemName])) {
-            $table = $cityPeopleTable;
-            $currentData = $checkPeople[$itemName];
-        } elseif (!empty($checkSoldiers[$itemName])) {
-            $table = $citySoldiersTable;
-            $currentData = $checkSoldiers[$itemName];
-        } else {
-            return false; // منبع پیدا نشد
+        // جستجو در جداول
+        foreach ([$cityItemsTable, $cityPeopleTable, $citySoldiersTable] as $t) {
+            $q = mysqli_query($conn, "SHOW COLUMNS FROM `$t` LIKE '{$itemName}'");
+            if (mysqli_num_rows($q) > 0) {
+                $table = $t;
+                $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `{$itemName}` FROM `$t` WHERE `city id` = '{$city_id}' LIMIT 1"));
+                $currentData = $row[$itemName] ?? "";
+                break;
+            }
         }
+
+        if (!$table) return false;
 
         $parts = explode("@", $currentData);
         $persian = $parts[0] ?? $itemName;
         $currentQty = (int)($parts[1] ?? 0);
 
         if ($currentQty < $amount) {
-            return false; // موجودی کافی نیست
+            return false;
         }
 
         $newQty = $currentQty - $amount;
@@ -488,36 +485,30 @@ function deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTab
 // ===============================================
 function addItemToCity($conn, $city_id, $item_name, $quantity, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable) {
     $tables = [$cityItemsTable, $cityPeopleTable, $citySoldiersTable, $cityBuildingsTable, $cityCampsTable];
-    $targetTable = "";
 
     foreach ($tables as $table) {
-        $result = mysqli_query($conn, "SHOW COLUMNS FROM `{$table}` LIKE '{$item_name}'");
-        if (mysqli_num_rows($result) > 0) {
-            $targetTable = $table;
-            break;
+        $q = mysqli_query($conn, "SHOW COLUMNS FROM `{$table}` LIKE '{$item_name}'");
+        if (mysqli_num_rows($q) > 0) {
+            $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `{$item_name}` FROM `{$table}` WHERE `city id` = '{$city_id}' LIMIT 1"));
+            $currentData = $row[$item_name] ?? "";
+
+            if (empty($currentData)) {
+                $persianName = getPersianName($conn, $item_name);
+                $newValue = "{$persianName}@{$quantity}";
+            } else {
+                $parts = explode("@", $currentData);
+                $persian = $parts[0] ?? $item_name;
+                $currentQty = (int)($parts[1] ?? 0);
+                $newQty = $currentQty + $quantity;
+                $newValue = "{$persian}@{$newQty}";
+            }
+
+            $conn->query("UPDATE `{$table}` SET `{$item_name}` = '{$newValue}' WHERE `city id` = '{$city_id}' LIMIT 1");
+            return true;
         }
     }
-
-    if (empty($targetTable)) return false;
-
-    $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `{$item_name}` FROM `{$targetTable}` WHERE `city id` = '{$city_id}' LIMIT 1"));
-    $currentData = $row[$item_name] ?? "";
-
-    if (empty($currentData)) {
-        $persianName = getPersianName($conn, $item_name);
-        $newValue = "{$persianName}@{$quantity}";
-    } else {
-        $parts = explode("@", $currentData);
-        $persian = $parts[0] ?? $item_name;
-        $currentQty = (int)($parts[1] ?? 0);
-        $newQty = $currentQty + $quantity;
-        $newValue = "{$persian}@{$newQty}";
-    }
-
-    $conn->query("UPDATE `{$targetTable}` SET `{$item_name}` = '{$newValue}' WHERE `city id` = '{$city_id}' LIMIT 1");
-    return true;
+    return false;
 }
-
 
 function getUpgradeButtons($conn) {
     $q = mysqli_query($conn, "SELECT * FROM `upgrade_list` WHERE `active`=1");
