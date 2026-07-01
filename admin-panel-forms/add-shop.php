@@ -32,15 +32,17 @@ else if ($theAdminStep == "add_shop_1" && $text != "🔙") {
     $conn->query("UPDATE `$adminsTable` SET `step`='add_shop_2', `thing`='{$enName}' WHERE `id`='{$from_id}' LIMIT 1");
 }
 
-// مرحله ۲: هزینه + ذخیره مستقیم
+// مرحله وارد کردن هزینه
 else if ($theAdminStep == "add_shop_2" && $text != "🔙") {
     $enName = $getAdmins['thing'];
 
-    $conn->query("UPDATE `shop_items` SET `costs`='{$text}' WHERE `item_name`='{$enName}' LIMIT 1");
+    // ذخیره مستقیم هزینه
+    $conn->query("UPDATE `shop_items` SET `costs` = '" . mysqli_real_escape_string($conn, $text) . "' 
+                  WHERE `item_name` = '{$enName}' LIMIT 1");
 
     bot('sendMessage', [
         'chat_id' => $chat_id,
-        'text' => "✅ هزینه ثبت شد.\n\n📌 حالا محدودیت‌ها را وارد کنید (هر خط یکی):\nmax_limit=0\ndaily_limit=0\none_time=0",
+        'text' => "✅ هزینه ثبت شد.\n\nحالا محدودیت‌ها را وارد کنید:\nmax_limit=0\ndaily_limit=0\none_time=0",
         'parse_mode' => "HTML",
         'reply_markup' => $adminBack,
     ]);
