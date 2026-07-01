@@ -297,7 +297,7 @@ function getShopBuyButtons($conn, $city_id) {
     while ($item = mysqli_fetch_assoc($q)) {
         $status = checkShopItemStatus($conn, $city_id, $item);
         $emoji = $status['can_buy'] ? '🟢' : '❌';
-        $buttons[] = [['text' => $emoji . " " . $item['persian_name'], 'callback_data' => 'buy_' . $item['item_name']]];
+        $buttons[] = [['text' => $emoji . " " . $item['persian_name'], 'callback_data' => $item['item_name']]];
     }
     $buttons[] = [['text' => '🔙 بازگشت', 'callback_data' => 'shoping']];
     return $buttons;
