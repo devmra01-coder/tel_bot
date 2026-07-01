@@ -326,18 +326,16 @@ function formatCosts($costs) {
     return $str;
 }
 
-// چک وضعیت (بدون وابستگی به price_gold)
 function checkShopItemStatus($conn, $city_id, $item, $requestedQty = 1) {
     $status = ['can_buy' => true, 'message' => ''];
 
-    if (!$item) {
+    if ($item['one_time'] == 1 && getOneTimePurchaseStatus($conn, $city_id, $item['item_name'])) {
         $status['can_buy'] = false;
-        $status['message'] = "آیتم یافت نشد.";
+        $status['message'] = "این آیتم فقط یک بار قابل خرید است.";
         return $status;
     }
 
-    // محدودیت کلی
-    if (!empty($item['is_limited']) && $item['max_limit'] > 0) {
+    if ($item['is_limited'] && $item['max_limit'] > 0) {
         $owned = getCityItemTotal($conn, $city_id, $item['item_name']);
         if ($owned + $requestedQty > $item['max_limit']) {
             $status['can_buy'] = false;
@@ -346,8 +344,7 @@ function checkShopItemStatus($conn, $city_id, $item, $requestedQty = 1) {
         }
     }
 
-    // محدودیت روزانه
-    if (!empty($item['daily_limit']) && $item['daily_limit'] > 0) {
+    if ($item['daily_limit'] > 0) {
         $daily = getDailyBought($conn, $city_id, $item['item_name']);
         if ($daily + $requestedQty > $item['daily_limit']) {
             $status['can_buy'] = false;
@@ -356,12 +353,14 @@ function checkShopItemStatus($conn, $city_id, $item, $requestedQty = 1) {
         }
     }
 
-    // تک‌باره
-    if (!empty($item['one_time']) && $item['one_time'] == 1) {
-        if (getOneTimePurchaseStatus($conn, $city_id, $item['item_name'])) {
-            $status['can_buy'] = false;
-            $status['message'] = "این آیتم فقط یک بار قابل خرید است.";
-            return $status;
+    if (!empty($item['requirements'])) {
+        $reqs = json_decode($item['requirements'], true);
+        foreach ($reqs as $reqItem => $reqQty) {
+            if (getCityItemTotal($conn, $city_id, $reqItem) < $reqQty) {
+                $status['can_buy'] = false;
+                $status['message'] = "پیش‌نیازها کامل نیست.";
+                return $status;
+            }
         }
     }
 
