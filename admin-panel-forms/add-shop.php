@@ -40,8 +40,19 @@ else if ($theAdminStep == "add_shop_2" && $text != "🔙") {
 
 // مرحله وارد کردن محدودیت‌ها
 else if ($theAdminStep == "add_shop_3" && $text != "🔙") {
-    $enName = $getAdmins['thing'];
-    $costs = $getAdmins['temp_data'] ?? '{}';
+    $adminData = mysqli_fetch_assoc(mysqli_query($conn, "SELECT * FROM `$adminsTable` WHERE `id`='{$from_id}' LIMIT 1"));
+    $enName = $adminData['thing'] ?? '';
+    $costs  = $adminData['temp_data'] ?? '{}';
+
+    if (empty($enName)) {
+        bot('sendMessage', [
+            'chat_id' => $chat_id,
+            'text' => "❌ خطا: نام آیتم پیدا نشد. دوباره از اول شروع کنید.",
+            'parse_mode' => "HTML",
+        ]);
+        $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
+        return;
+    }
 
     // پردازش محدودیت‌ها
     $max_limit = 0;
@@ -60,24 +71,28 @@ else if ($theAdminStep == "add_shop_3" && $text != "🔙") {
         }
     }
 
+    // ذخیره نهایی
     $conn->query("INSERT INTO `shop_items` (`item_name`, `persian_name`, `costs`, `max_limit`, `daily_limit`, `one_time`) 
                   VALUES (
                     '{$enName}', 
-                    (SELECT `persian name` FROM `$itemsTable` WHERE `english name`='{$enName}' LIMIT 1),
+                    COALESCE((SELECT `persian name` FROM `$itemsTable` WHERE `english name`='{$enName}' LIMIT 1),
+                             (SELECT `persian name` FROM `$peopleTable` WHERE `english name`='{$enName}' LIMIT 1),
+                             (SELECT `persian name` FROM `$soldiersTable` WHERE `english name`='{$enName}' LIMIT 1),
+                             '{$enName}'),
                     '{$costs}',
                     {$max_limit},
                     {$daily_limit},
                     {$one_time}
                   ) 
                   ON DUPLICATE KEY UPDATE 
-                    `costs`='{$costs}', 
-                    `max_limit`={$max_limit}, 
-                    `daily_limit`={$daily_limit}, 
-                    `one_time`={$one_time}");
+                    `costs` = '{$costs}',
+                    `max_limit` = {$max_limit},
+                    `daily_limit` = {$daily_limit},
+                    `one_time` = {$one_time}");
 
     bot('sendMessage', [
         'chat_id' => $chat_id,
-        'text' => "✅ آیتم خرید با موفقیت اضافه شد!\n\nمحدودیت‌ها اعمال شد.",
+        'text' => "✅ آیتم خرید با موفقیت اضافه/بروزرسانی شد!\n\nمحدودیت‌ها اعمال شد.",
         'parse_mode' => "HTML",
         'reply_markup' => $adminBack,
     ]);
