@@ -91,26 +91,18 @@ else if ($data == "shop_buy" || $playerStep == "shop_buy") {
     $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_1' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
 
-// انتخاب آیتم از دکمه (اصلاح شده)
+// انتخاب آیتم
 else if ($playerStep == "shop_buy_1" && $data) {
     $itemName = $data;
-    $item = getShopItem($conn, $itemName);
 
+    $item = getShopItem($conn, $itemName);
     if (!$item) {
-        bot('sendMessage', [
-            'callback_query_id' => $callback_id ?? '',
-            'text' => "❌ آیتم یافت نشد",
-            'show_alert' => true
-        ]);
+        bot('answerCallbackQuery', ['callback_query_id' => $callback_id ?? '', 'text' => "❌ آیتم یافت نشد", 'show_alert' => true]);
         return;
     }
 
     $status = checkShopItemStatus($conn, $chat_id, $item);
-    $text = "📦 <b>{$item['persian_name']}</b>\n\n";
-
-    if (!empty($item['price_gold']) && $item['price_gold'] > 0) {
-        $text .= "💰 سکه: {$item['price_gold']}\n";
-    }
+    $text = "📦 <b>" . ($item['persian_name'] ?? $itemName) . "</b>\n\n";
     $text .= getCostsText($item['costs'] ?? '{}') . "\n\n";
 
     if (!$status['can_buy']) {
@@ -119,16 +111,16 @@ else if ($playerStep == "shop_buy_1" && $data) {
     } else {
         $text .= "🧮 **چند واحد می‌خواهید بخرید؟**";
         $keyboard = $back;
-        $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_2', `sendItem`='{$itemName}' WHERE `city id`='{$chat_id}' LIMIT 1");
+        $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_2@{$itemName}' WHERE `city id`='{$chat_id}' LIMIT 1");
     }
 
     EditMessageText($chatId, $messageId, $text, "HTML", $keyboard);
 }
 
 // وارد کردن تعداد
-else if ($playerStep == "shop_buy_2" && is_numeric($text) && (int)$text > 0) {
+else if (strpos($playerStep, "shop_buy_2@") !== false && is_numeric($text) && (int)$text > 0) {
+    $itemName = str_replace("shop_buy_2@", '', $playerStep);
     $quantity = (int)$text;
-    $itemName = $player['sendItem'] ?? '';
 
     $item = getShopItem($conn, $itemName);
     if (!$item) {
@@ -154,13 +146,20 @@ else if ($playerStep == "shop_buy_2" && is_numeric($text) && (int)$text > 0) {
         'reply_markup' => $inlineYesOrNo
     ]);
 
-    $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_3', `sendItemNum`='{$quantity}' WHERE `city id`='{$chat_id}' LIMIT 1");
+    $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_3@{$itemName}@{$quantity}' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
+
 // تأیید نهایی
-else if ($playerStep == "shop_buy_3" && $text == "yes") {
-    $itemName = $player['sendItem'];
-    $qty = (int)$player['sendItemNum'];
+else if (strpos($playerStep, "shop_buy_3@") !== false && $text == "yes") {
+    $parts = explode("@", $playerStep);
+    $itemName = $parts[1] ?? '';
+    $qty = (int)($parts[2] ?? 0);
+
     $item = getShopItem($conn, $itemName);
+    if (!$item) {
+        bot('sendMessage', ['chat_id' => $chat_id, 'text' => "❌ آیتم یافت نشد."]);
+        return;
+    }
 
     $result = executePurchase($conn, $chat_id, $item, $qty, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable);
 
@@ -168,14 +167,14 @@ else if ($playerStep == "shop_buy_3" && $text == "yes") {
         bot('EditMessageText', [
             'chat_id' => $chat_id,
             'message_id' => $message_id,
-            'text' => "🎉 خرید با موفقیت انجام شد!\n{$qty} واحد {$item['persian_name']} به انبار شهر اضافه شد.",
+            'text' => "🎉 خرید با موفقیت انجام شد!\n{$qty} واحد " . ($item['persian_name'] ?? $itemName) . " به انبار اضافه شد.",
             'parse_mode' => 'HTML'
         ]);
     } else {
         bot('EditMessageText', [
             'chat_id' => $chat_id,
             'message_id' => $message_id,
-            'text' => "❌ " . $result['message'],
+            'text' => "❌ " . ($result['message'] ?? 'خطای ناشناخته'),
             'parse_mode' => 'HTML'
         ]);
     }
