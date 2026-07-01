@@ -411,8 +411,6 @@ function getCityItemTotal($conn, $city_id, $item_name) {
     }
     return 0;
 }
-
-
 function executePurchase($conn, $city_id, $item, $quantity, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable) {
     $status = checkShopItemStatus($conn, $city_id, $item, $quantity);
     if (!$status['can_buy']) {
@@ -427,10 +425,10 @@ function executePurchase($conn, $city_id, $item, $quantity, $cityItemsTable, $ci
 
     addItemToCity($conn, $city_id, $item['item_name'], $quantity, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable);
 
-    if ($item['daily_limit'] > 0) {
+    if (!empty($item['daily_limit']) && $item['daily_limit'] > 0) {
         logDailyPurchase($conn, $city_id, $item['item_name'], $quantity);
     }
-    if ($item['one_time'] == 1) {
+    if (!empty($item['one_time']) && $item['one_time'] == 1) {
         logOneTimePurchase($conn, $city_id, $item['item_name']);
     }
 
@@ -438,27 +436,40 @@ function executePurchase($conn, $city_id, $item, $quantity, $cityItemsTable, $ci
 }
 
 // ===============================================
-//     توابع کمکی خرید - کامل و هماهنگ با کد شما
+// محاسبه هزینه کل
 // ===============================================
-function getCostsText($costsJson) {
-    $costs = json_decode($costsJson, true) ?? [];
-    $text = "";
-    foreach ($costs as $item => $amount) {
-        $text .= "• {$item}: {$amount}\n";
+function calculateTotalCost($item, $quantity) {
+    if (!$item) return [];
+    $costs = json_decode($item['costs'] ?? '{}', true) ?? [];
+    $total = [];
+    foreach ($costs as $res => $amt) {
+        $total[$res] = ($total[$res] ?? 0) + (int)$amt * $quantity;
     }
-    return $text ?: "بدون هزینه اضافی";
+    return $total;
 }
-function deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTable, $citySoldiersTable)
-{
-    // $costs مثلاً: ['gold' => 500, 'wood' => 200, 'stone' => 150, ...]
 
+// نمایش هزینه‌ها
+function formatCosts($costs) {
+    if (empty($costs)) return "بدون هزینه";
+    $str = "";
+    foreach ($costs as $res => $amt) {
+        if ($amt > 0) {
+            $str .= "• {$res}: {$amt}\n";
+        }
+    }
+    return $str;
+}
+
+// ===============================================
+// کسر منابع
+// ===============================================
+function deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTable, $citySoldiersTable) {
     foreach ($costs as $itemName => $amount) {
         if ($amount <= 0) continue;
 
         $table = "";
         $currentData = "";
 
-        // پیدا کردن جدول مربوطه
         $checkItem = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$itemName` FROM `$cityItemsTable` WHERE `city id` = '{$city_id}' LIMIT 1"));
         $checkPeople = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$itemName` FROM `$cityPeopleTable` WHERE `city id` = '{$city_id}' LIMIT 1"));
         $checkSoldiers = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$itemName` FROM `$citySoldiersTable` WHERE `city id` = '{$city_id}' LIMIT 1"));
@@ -476,7 +487,6 @@ function deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTab
             return false; // منبع پیدا نشد
         }
 
-        // پردازش مقدار فعلی (فرمت: name@quantity)
         $parts = explode("@", $currentData);
         $persian = $parts[0] ?? $itemName;
         $currentQty = (int)($parts[1] ?? 0);
@@ -490,38 +500,33 @@ function deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTab
 
         $conn->query("UPDATE `{$table}` SET `{$itemName}` = '{$newValue}' WHERE `city id` = '{$city_id}' LIMIT 1");
     }
-
     return true;
 }
 
 // ===============================================
-
-function addItemToCity($conn, $city_id, $item_name, $quantity, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable)
-{
+// اضافه کردن آیتم به شهر
+// ===============================================
+function addItemToCity($conn, $city_id, $item_name, $quantity, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable) {
     $tables = [$cityItemsTable, $cityPeopleTable, $citySoldiersTable, $cityBuildingsTable, $cityCampsTable];
     $targetTable = "";
-    $currentData = "";
 
     foreach ($tables as $table) {
         $result = mysqli_query($conn, "SHOW COLUMNS FROM `{$table}` LIKE '{$item_name}'");
         if (mysqli_num_rows($result) > 0) {
             $targetTable = $table;
-            $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `{$item_name}` FROM `{$table}` WHERE `city id` = '{$city_id}' LIMIT 1"));
-            $currentData = $row[$item_name] ?? "";
             break;
         }
     }
 
-    if (empty($targetTable)) {
-        return false; // جدول پیدا نشد
-    }
+    if (empty($targetTable)) return false;
+
+    $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `{$item_name}` FROM `{$targetTable}` WHERE `city id` = '{$city_id}' LIMIT 1"));
+    $currentData = $row[$item_name] ?? "";
 
     if (empty($currentData)) {
-        // اولین بار اضافه می‌شود
         $persianName = getPersianName($conn, $item_name);
         $newValue = "{$persianName}@{$quantity}";
     } else {
-        // افزایش مقدار موجود
         $parts = explode("@", $currentData);
         $persian = $parts[0] ?? $item_name;
         $currentQty = (int)($parts[1] ?? 0);
@@ -531,33 +536,6 @@ function addItemToCity($conn, $city_id, $item_name, $quantity, $cityItemsTable, 
 
     $conn->query("UPDATE `{$targetTable}` SET `{$item_name}` = '{$newValue}' WHERE `city id` = '{$city_id}' LIMIT 1");
     return true;
-}
-
-// تابع کمکی برای گرفتن نام فارسی (در صورت نیاز)
-function getPersianName($conn, $englishName)
-{
-    $tables = ['itemsTable', 'peopleTable', 'soldiersTable', 'buildingsTable', 'campsTable'];
-    foreach ($tables as $tableVar) {
-        global $$tableVar;
-        $table = $$tableVar;
-        $q = mysqli_query($conn, "SELECT `persian name` FROM `{$table}` WHERE `english name` = '{$englishName}' LIMIT 1");
-        if ($row = mysqli_fetch_assoc($q)) {
-            return $row['persian name'];
-        }
-    }
-    return $englishName; // fallback
-}
-
-function logDailyPurchase($conn, $city_id, $item_name, $quantity) {
-    $today = date('Y-m-d');
-    mysqli_query($conn, "INSERT INTO `shop_daily_log` (`city_id`, `item_name`, `date`, `quantity`) 
-                         VALUES ('$city_id', '$item_name', '$today', $quantity) 
-                         ON DUPLICATE KEY UPDATE `quantity` = `quantity` + $quantity");
-}
-
-function logOneTimePurchase($conn, $city_id, $item_name) {
-    mysqli_query($conn, "INSERT INTO `shop_one_time_log` (`city_id`, `item_name`, `purchase_date`) 
-                         VALUES ('$city_id', '$item_name', NOW())");
 }
 
 
