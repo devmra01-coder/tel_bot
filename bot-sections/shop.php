@@ -155,13 +155,7 @@ else if (strpos($playerStep, "shop_buy_3@") !== false) {
     $parts = explode("@", $playerStep);
     $itemName = $parts[1] ?? '';
     $qty = (int)($parts[2] ?? 0);
-// لاگ برای دیباگ
-    bot('EditMessageText', [
-        'chat_id' => $chat_id,
-        'message_id' => $message_id,
-        'text' => "Debug:\nStep = {$playerStep}\nText = {$text}\nItem = {$itemName}\nQty = {$qty}",
-        'parse_mode' => 'HTML'
-    ]);
+    
     if ($text == "yes") {
         $item = getShopItem($conn, $itemName);
         if (!$item) {
