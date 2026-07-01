@@ -81,8 +81,7 @@ else if ($playerStep == "Shop_upgrade_2" && $text == "yes") {
 
     $conn->query("UPDATE `$citiesTable` SET `step`='none' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
-    
-// ==================== نمایش لیست آیتم‌ها ====================
+     
 // ==================== نمایش لیست آیتم‌ها ====================
 else if ($data == "shop_buy" || $playerStep == "shop_buy") {
     $buttons = getShopBuyButtons($conn, $chat_id);
@@ -92,8 +91,14 @@ else if ($data == "shop_buy" || $playerStep == "shop_buy") {
     $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_1' WHERE `city id`='{$chat_id}' LIMIT 1");
 }
 
-// انتخاب آیتم از دکمه (اصلاح شده)
-else if (($playerStep == "shop_buy_1" || strpos($data ?? '', 'buy_') === 0) && strpos($data ?? '', 'buy_') === 0) {
+// انتخاب آیتم (اصلاح شده و قوی)
+else if (strpos($data ?? '', 'buy_') === 0) {
+    // همیشه answerCallbackQuery را بده
+    bot('answerCallbackQuery', [
+        'callback_query_id' => $callback_id ?? '',
+        'text' => "در حال بارگذاری...",
+    ]);
+
     $itemName = str_replace('buy_', '', $data);
     $item = getShopItem($conn, $itemName);
 
