@@ -302,17 +302,42 @@ function getShopBuyButtons($conn, $city_id) {
     $buttons[] = [['text' => '🔙 بازگشت', 'callback_data' => 'shoping']];
     return $buttons;
 }
+// محاسبه هزینه کل (فقط بر اساس costs که ادمین وارد کرده)
+function calculateTotalCost($item, $quantity) {
+    if (!$item) return [];
 
+    $costs = json_decode($item['costs'], true) ?? [];
+    $total = [];
+
+    foreach ($costs as $res => $amt) {
+        $total[$res] = ($total[$res] ?? 0) + (int)$amt * $quantity;
+    }
+    return $total;
+}
+
+// نمایش هزینه‌ها
+function formatCosts($costs) {
+    if (empty($costs)) return "بدون هزینه";
+
+    $str = "";
+    foreach ($costs as $res => $amt) {
+        $str .= "• {$res}: {$amt}\n";
+    }
+    return $str;
+}
+
+// چک وضعیت (بدون وابستگی به price_gold)
 function checkShopItemStatus($conn, $city_id, $item, $requestedQty = 1) {
     $status = ['can_buy' => true, 'message' => ''];
 
-    if ($item['one_time'] == 1 && getOneTimePurchaseStatus($conn, $city_id, $item['item_name'])) {
+    if (!$item) {
         $status['can_buy'] = false;
-        $status['message'] = "این آیتم فقط یک بار قابل خرید است.";
+        $status['message'] = "آیتم یافت نشد.";
         return $status;
     }
 
-    if ($item['is_limited'] && $item['max_limit'] > 0) {
+    // محدودیت کلی
+    if (!empty($item['is_limited']) && $item['max_limit'] > 0) {
         $owned = getCityItemTotal($conn, $city_id, $item['item_name']);
         if ($owned + $requestedQty > $item['max_limit']) {
             $status['can_buy'] = false;
@@ -321,7 +346,8 @@ function checkShopItemStatus($conn, $city_id, $item, $requestedQty = 1) {
         }
     }
 
-    if ($item['daily_limit'] > 0) {
+    // محدودیت روزانه
+    if (!empty($item['daily_limit']) && $item['daily_limit'] > 0) {
         $daily = getDailyBought($conn, $city_id, $item['item_name']);
         if ($daily + $requestedQty > $item['daily_limit']) {
             $status['can_buy'] = false;
@@ -330,20 +356,17 @@ function checkShopItemStatus($conn, $city_id, $item, $requestedQty = 1) {
         }
     }
 
-    if (!empty($item['requirements'])) {
-        $reqs = json_decode($item['requirements'], true);
-        foreach ($reqs as $reqItem => $reqQty) {
-            if (getCityItemTotal($conn, $city_id, $reqItem) < $reqQty) {
-                $status['can_buy'] = false;
-                $status['message'] = "پیش‌نیازها کامل نیست.";
-                return $status;
-            }
+    // تک‌باره
+    if (!empty($item['one_time']) && $item['one_time'] == 1) {
+        if (getOneTimePurchaseStatus($conn, $city_id, $item['item_name'])) {
+            $status['can_buy'] = false;
+            $status['message'] = "این آیتم فقط یک بار قابل خرید است.";
+            return $status;
         }
     }
 
     return $status;
 }
-
 function getOneTimePurchaseStatus($conn, $city_id, $item_name) {
     $q = mysqli_query($conn, "SELECT 1 FROM `shop_one_time_log` WHERE `city_id`='{$city_id}' AND `item_name`='{$item_name}' LIMIT 1");
     return mysqli_num_rows($q) > 0;
@@ -372,23 +395,6 @@ function getCityItemTotal($conn, $city_id, $item_name) {
     return 0;
 }
 
-function calculateTotalCost($item, $quantity) {
-    $costs = json_decode($item['costs'], true) ?? [];
-    $total = ['gold' => ($item['price_gold'] ?? 0) * $quantity];
-    foreach ($costs as $res => $amt) {
-        $total[$res] = ($total[$res] ?? 0) + $amt * $quantity;
-    }
-    return $total;
-}
-
-function formatCosts($costs) {
-    $str = "";
-    if (!empty($costs['gold'])) $str .= "💰 {$costs['gold']} سکه\n";
-    foreach ($costs as $res => $amt) {
-        if ($res !== 'gold' && $amt > 0) $str .= "• {$res}: {$amt}\n";
-    }
-    return $str ?: "بدون هزینه اضافی";
-}
 
 function executePurchase($conn, $city_id, $item, $quantity, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable) {
     $status = checkShopItemStatus($conn, $city_id, $item, $quantity);
