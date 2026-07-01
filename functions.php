@@ -302,48 +302,7 @@ function getShopBuyButtons($conn, $city_id) {
     $buttons[] = [['text' => '🔙 بازگشت', 'callback_data' => 'shoping']];
     return $buttons;
 }
-// محاسبه هزینه کل
-function calculateTotalCost($item, $quantity) {
-    if (!$item || empty($item['costs'])) return [];
 
-    $costsStr = $item['costs'];
-    $costs = [];
-
-    // اگر JSON بود
-    if (strpos($costsStr, '{') !== false) {
-        $costs = json_decode($costsStr, true) ?? [];
-    } 
-    // اگر به صورت متن ساده بود (مثل Dollar:150)
-    else {
-        $lines = explode("\n", $costsStr);
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (strpos($line, ':') !== false) {
-                list($res, $amt) = explode(':', $line, 2);
-                $costs[trim($res)] = (int)trim($amt);
-            }
-        }
-    }
-
-    $total = [];
-    foreach ($costs as $res => $amt) {
-        $total[$res] = ($total[$res] ?? 0) + (int)$amt * $quantity;
-    }
-    return $total;
-}
-
-// نمایش هزینه‌ها
-function formatCosts($costs) {
-    if (empty($costs)) return "بدون هزینه";
-
-    $str = "";
-    foreach ($costs as $res => $amt) {
-        if ($amt > 0) {
-            $str .= "• {$res}: {$amt}\n";
-        }
-    }
-    return $str;
-}
 function checkShopItemStatus($conn, $city_id, $item, $requestedQty = 1) {
     $status = ['can_buy' => true, 'message' => ''];
 
@@ -438,9 +397,29 @@ function executePurchase($conn, $city_id, $item, $quantity, $cityItemsTable, $ci
 // ===============================================
 // محاسبه هزینه کل
 // ===============================================
+// محاسبه هزینه کل
 function calculateTotalCost($item, $quantity) {
-    if (!$item) return [];
-    $costs = json_decode($item['costs'] ?? '{}', true) ?? [];
+    if (!$item || empty($item['costs'])) return [];
+
+    $costsStr = $item['costs'];
+    $costs = [];
+
+    // اگر JSON بود
+    if (strpos($costsStr, '{') !== false) {
+        $costs = json_decode($costsStr, true) ?? [];
+    } 
+    // اگر به صورت متن ساده بود (مثل Dollar:150)
+    else {
+        $lines = explode("\n", $costsStr);
+        foreach ($lines as $line) {
+            $line = trim($line);
+            if (strpos($line, ':') !== false) {
+                list($res, $amt) = explode(':', $line, 2);
+                $costs[trim($res)] = (int)trim($amt);
+            }
+        }
+    }
+
     $total = [];
     foreach ($costs as $res => $amt) {
         $total[$res] = ($total[$res] ?? 0) + (int)$amt * $quantity;
@@ -451,6 +430,7 @@ function calculateTotalCost($item, $quantity) {
 // نمایش هزینه‌ها
 function formatCosts($costs) {
     if (empty($costs)) return "بدون هزینه";
+
     $str = "";
     foreach ($costs as $res => $amt) {
         if ($amt > 0) {
