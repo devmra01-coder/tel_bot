@@ -1,113 +1,70 @@
 <?php
 // ==================== افزودن آیتم به ارتقا ====================
 if ($text == "[⚒]- افزودن آیتم ارتقا" && $theAdminStep == "none") {
-    $allItems = getAllGameItems($conn); // همان تابع قبلی
-
-    $keyboard = ['inline_keyboard' => []];
-    foreach ($allItems as $item) {
-        $keyboard['inline_keyboard'][] = [[
-            'text' => $item['persian'] . " (" . $item['english'] . ")",
-            'callback_data' => "upgadd_" . $item['english']
-        ]];
-    }
-    $keyboard['inline_keyboard'][] = [['text' => '🔙 بازگشت', 'callback_data' => 'admin_back']];
-
     bot('sendMessage', [
         'chat_id' => $chat_id,
-        'text' => "📋 **انتخاب آیتم برای افزودن به سیستم ارتقا:**",
+        'text' => "📌 نام انگلیسی آیتم ارتقا را وارد کنید (مثال: factory، barracks، mine):",
         'parse_mode' => "HTML",
-        'reply_markup' => json_encode($keyboard)
+        'reply_markup' => $adminBack,
     ]);
-
-    $conn->query("UPDATE `$adminsTable` SET `step`='upgrade_add_select' WHERE `id`='{$from_id}' LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='add_upgrade_1' WHERE `id`='{$from_id}' LIMIT 1");
 }
 
-// انتخاب آیتم ارتقا
-else if ($theAdminStep == "upgrade_add_select" && strpos($data, 'upgadd_') === 0) {
-    $englishName = str_replace('upgadd_', '', $data);
-    
+// مرحله ۱: نام انگلیسی
+else if ($theAdminStep == "add_upgrade_1" && $text != "🔙") {
+    $enName = trim($text);
     bot('sendMessage', [
         'chat_id' => $chat_id,
-        'text' => "✅ آیتم انتخاب شد: <b>$englishName</b>\n\nحالا هزینه ارتقا هر سطح را مشخص کنید.",
+        'text' => "📌 هزینه ارتقا سطوح را به فرمت JSON وارد کنید:\n\nمثال:\n<code>{\"1\":{\"gold\":500,\"wood\":200}, \"2\":{\"gold\":900,\"wood\":400}, \"3\":{\"gold\":1500}}</code>",
         'parse_mode' => "HTML",
+        'reply_markup' => $adminBack,
     ]);
-
-    $conn->query("UPDATE `$adminsTable` SET `step`='upgrade_add_cost', `thing`='{$englishName}', `temp_data`='' WHERE `id`='{$from_id}' LIMIT 1");
-    
-    // شروع انتخاب هزینه برای سطح ۱
-    showUpgradeCostSelection($conn, $chat_id, $englishName, 1);
+    $conn->query("UPDATE `$adminsTable` SET `step`='add_upgrade_2', `thing`='{$enName}' WHERE `id`='{$from_id}' LIMIT 1");
 }
 
-// انتخاب هزینه برای سطح خاص
-else if ($theAdminStep == "upgrade_add_cost" && strpos($data, 'upgcost_') === 0) {
-    $parts = explode('_', $data);
-    $level = (int)$parts[1];
-    $costItem = $parts[2];
+// مرحله ۲: هزینه ارتقا + ذخیره
+else if ($theAdminStep == "add_upgrade_2" && $text != "🔙") {
+    $enName = $getAdmins['thing'];
+
+    $conn->query("INSERT INTO `upgrade_list` (`item_name`, `upgrade_costs`) 
+                  VALUES ('{$enName}', '{$text}')
+                  ON DUPLICATE KEY UPDATE `upgrade_costs`='{$text}'");
 
     bot('sendMessage', [
         'chat_id' => $chat_id,
-        'text' => "📌 تعداد $costItem برای ارتقا به سطح $level را وارد کنید:",
+        'text' => "✅ هزینه ارتقا ثبت شد.\n\n📌 حالا محدودیت‌ها را وارد کنید (هر خط یکی):\nmax_limit=0\ndaily_limit=0\none_time=0",
         'parse_mode' => "HTML",
         'reply_markup' => $adminBack,
     ]);
 
-    $conn->query("UPDATE `$adminsTable` SET `step`='upgrade_add_cost_qty', `thing2`='{$level}_{$costItem}' WHERE `id`='{$from_id}' LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='add_upgrade_3' WHERE `id`='{$from_id}' LIMIT 1");
 }
 
-// وارد کردن تعداد هزینه
-else if ($theAdminStep == "upgrade_add_cost_qty" && is_numeric($text)) {
-    $data = $getAdmins['thing2'];
-    list($level, $costItem) = explode('_', $data);
+// مرحله ۳: محدودیت‌ها
+else if ($theAdminStep == "add_upgrade_3" && $text != "🔙") {
+    $enName = $getAdmins['thing'];
 
-    $current = $getAdmins['temp_data'] ? json_decode($getAdmins['temp_data'], true) : [];
-    $current[$level][$costItem] = (int)$text;
+    $max_limit = 0;
+    $daily_limit = 0;
+    $one_time = 0;
 
-    $conn->query("UPDATE `$adminsTable` SET `temp_data`='" . json_encode($current) . "' WHERE `id`='{$from_id}' LIMIT 1");
+    $lines = explode("\n", $text);
+    foreach ($lines as $line) {
+        $line = trim($line);
+        if (strpos($line, 'max_limit=') !== false) {
+            $max_limit = (int)str_replace('max_limit=', '', $line);
+        } elseif (strpos($line, 'daily_limit=') !== false) {
+            $daily_limit = (int)str_replace('daily_limit=', '', $line);
+        } elseif (strpos($line, 'one_time=') !== false) {
+            $one_time = (int)str_replace('one_time=', '', $line);
+        }
+    }
 
-    bot('sendMessage', [
-        'chat_id' => $chat_id,
-        'text' => "✅ هزینه سطح $level اضافه شد.\n\nبرای سطح بعدی یا تمام شدن، انتخاب کنید.",
-        'parse_mode' => "HTML",
-    ]);
-
-    // پیشنهاد سطح بعدی
-    $nextLevel = $level + 1;
-    bot('sendMessage', [
-        'chat_id' => $chat_id,
-        'text' => "سطح $nextLevel را هم می‌خواهید هزینه تعریف کنید؟",
-        'reply_markup' => json_encode([
-            'inline_keyboard' => [
-                [['text' => "بله - سطح $nextLevel", 'callback_data' => "upg_nextlevel_$nextLevel"]],
-                [['text' => "تمام شد", 'callback_data' => "upg_done"]]
-            ]
-        ])
-    ]);
-}
-
-// تمام شدن و ذخیره
-else if ($theAdminStep == "upgrade_add_cost" && $data == "upg_done") {
-    $englishName = $getAdmins['thing'];
-    $costsJson = $getAdmins['temp_data'] ?: '{}';
-
-    bot('sendMessage', [
-        'chat_id' => $chat_id,
-        'text' => "📌 محدودیت‌ها را وارد کنید (max_limit, daily_limit, one_time):",
-        'parse_mode' => "HTML",
-    ]);
-
-    $conn->query("UPDATE `$adminsTable` SET `step`='upgrade_add_limits', `temp_data`='{$costsJson}' WHERE `id`='{$from_id}' LIMIT 1");
-}
-
-// ذخیره نهایی
-else if ($theAdminStep == "upgrade_add_limits" && $text != "🔙") {
-    $englishName = $getAdmins['thing'];
-    $costs = $getAdmins['temp_data'];
-
-    $conn->query("INSERT INTO `upgrade_list` (`item_name`, `persian_name`, `upgrade_costs`) 
-                  VALUES ('{$englishName}', 
-                          (SELECT `persian name` FROM `$buildingsTable` WHERE `english name`='{$englishName}' LIMIT 1),
-                          '{$costs}') 
-                  ON DUPLICATE KEY UPDATE `upgrade_costs`='{$costs}'");
+    $conn->query("UPDATE `upgrade_list` SET 
+                    `max_limit` = {$max_limit},
+                    `daily_limit` = {$daily_limit},
+                    `one_time` = {$one_time}
+                  WHERE `item_name`='{$enName}' LIMIT 1");
 
     bot('sendMessage', [
         'chat_id' => $chat_id,
@@ -116,6 +73,5 @@ else if ($theAdminStep == "upgrade_add_limits" && $text != "🔙") {
         'reply_markup' => $adminBack,
     ]);
 
-    $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}' LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='none', `thing`='' WHERE `id`='{$from_id}' LIMIT 1");
 }
-
