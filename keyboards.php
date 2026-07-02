@@ -10,10 +10,25 @@ $adminPanel = json_encode([
     'resize_keyboard' => true,
     'remove_keyboard' => true
 ]);
-
 $itemsPanel = json_encode([
     'keyboard' => [
         [['text' => "[❌]- حذف آیتم"], ['text' => "[➕]- افزودن آیتم"]],
+        [['text' => "🔙"]],
+    ],
+    'resize_keyboard' => true,
+    'remove_keyboard' => true
+]);
+$ShopPanel = json_encode([
+    'keyboard' => [
+        [['text' => "[❌]- حذف آیتم"], ['text' => "[🛒]- افزودن آیتم خرید"]],
+        [['text' => "🔙"]],
+    ],
+    'resize_keyboard' => true,
+    'remove_keyboard' => true
+]);
+$UpgradePanel = json_encode([
+    'keyboard' => [
+        [['text' => "[❌]- حذف آیتم"], ['text' => "[🛒]- افزودن آیتم خرید"]],
         [['text' => "🔙"]],
     ],
     'resize_keyboard' => true,
