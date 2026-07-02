@@ -72,7 +72,7 @@ else if (strpos($playerStep, "upgrade_2@") !== false) {
                 'parse_mode' => 'HTML'
             ]);
         } else {
-            $result = executeUpgrade($conn, $chat_id, $item, $nextLevel, $cityBuildingsTable, $cityCampsTable, $buildingsTable, $campsTable, $cityItemsTable, $cityPeopleTable, $citySoldiersTable);
+            $result = executeUpgrade($conn, $chat_id, $item, $nextLevel);
 
             if ($result['success']) {
                 bot('EditMessageText', [
