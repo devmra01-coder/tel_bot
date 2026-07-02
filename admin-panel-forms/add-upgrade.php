@@ -2,7 +2,7 @@
 
 
 // ==================== افزودن به سیستم ارتقا ====================
-if ($text == "[⚒]- افزودن آیتم ارتقا"  && $theAdminStep == "none") {
+if ($text == "افزودن آیتم ارتقا"  && $theAdminStep == "none") {
     bot('sendMessage', [
         'chat_id' => $chat_id,
         'text' => "📌 نام انگلیسی آیتم ارتقا را وارد کنید (مثال: factory، barracks، mine):",
