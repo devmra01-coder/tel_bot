@@ -78,9 +78,10 @@ else if (strpos($playerStep, "upgrade_2@") !== false) {
                 bot('EditMessageText', [
                     'chat_id' => $chat_id,
                     'message_id' => $message_id,
-                    'text' => "✅ ارتقا با موفقیت انجام شد!\n" . 
-                              ($item['persian_name'] ?? $itemName) . 
-                              " به سطح {$nextLevel} رسید.",
+                    'text' => "MMDGOLI",
+                    // 'text' => "✅ ارتقا با موفقیت انجام شد!\n" . 
+                    //           ($item['persian_name'] ?? $itemName) . 
+                    //           " به سطح {$nextLevel} رسید.",
                     'parse_mode' => 'HTML'
                 ]);
             } else {
