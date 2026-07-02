@@ -21,12 +21,12 @@ if (in_array($from_id, $admins)) {
         SendMessage($chat_id, $theText, "HTML", $message_id, $itemsPanel);
         $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}'LIMIT 1");
     }
-    if ($text == "💎 مدیریت آیتم ها" && $theAdminStep == "none") {
+    if ($text == "🛒 مدیریت ایتم های خرید" && $theAdminStep == "none") {
         $theText = "📙 به بخش مدیریت آیتم ها خرید خوش آمدید. لطفا از منوی زیر عملیات مورد نظر خود را انتخاب کنید.";
         SendMessage($chat_id, $theText, "HTML", $message_id, $itemsPanel);
         $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}'LIMIT 1");
     }
-    if ($text == "💎 مدیریت آیتم ها" && $theAdminStep == "none") {
+    if ($text == "🛒 مدیریت ایتم های ارتقا" && $theAdminStep == "none") {
         $theText = "📙 به بخش مدیریت آیتم ها ارتقا خوش آمدید. لطفا از منوی زیر عملیات مورد نظر خود را انتخاب کنید.";
         SendMessage($chat_id, $theText, "HTML", $message_id, $itemsPanel);
         $conn->query("UPDATE `$adminsTable` SET `step`='none' WHERE `id`='{$from_id}'LIMIT 1");
