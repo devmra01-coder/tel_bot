@@ -520,10 +520,6 @@ function getUpgradeButtons($conn) {
     return $buttons;
 }
 
-function getUpgradeItem($conn, $itemName) {
-    $q = mysqli_query($conn, "SELECT * FROM `upgrade_list` WHERE `item_name` = '{$itemName}' LIMIT 1");
-    return mysqli_fetch_assoc($q);
-}
 // دریافت آیتم ارتقا
 function getUpgradeItem($conn, $itemName) {
     $itemName = mysqli_real_escape_string($conn, $itemName);
