@@ -61,7 +61,7 @@ else if (strpos($playerStep, "upgrade_2@") !== false) {
     $parts = explode("@", $playerStep);
     $itemName = $parts[1] ?? '';
     $nextLevel = (int)($parts[2] ?? 0);
-
+bot('sendMessage', ['chat_id' => $chat_id, 'text' => "Debug Upgrade: Step = " . $playerStep . " | Text = " . $text]);
     if ($text == "yes") {
         $item = getUpgradeItem($conn, $itemName);
         if ($item) {
