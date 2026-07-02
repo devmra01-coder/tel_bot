@@ -20,7 +20,7 @@ $itemsPanel = json_encode([
 ]);
 $ShopPanel = json_encode([
     'keyboard' => [
-        [['text' => "[❌]- حذف آیتم"], ['text' => "[🛒]- افزودن آیتم خرید"]],
+        [['text' => "[❌]- حذف آیتم خرید"], ['text' => "[🛒]- افزودن آیتم خرید"]],
         [['text' => "🔙"]],
     ],
     'resize_keyboard' => true,
@@ -28,7 +28,7 @@ $ShopPanel = json_encode([
 ]);
 $UpgradePanel = json_encode([
     'keyboard' => [
-        [['text' => "[❌]- حذف آیتم"], ['text' => "[🛒]- افزودن آیتم خرید"]],
+        [['text' => "[❌]- حذف آیتم ارتقا"], ['text' => "افزودن آیتم ارتقا"]],
         [['text' => "🔙"]],
     ],
     'resize_keyboard' => true,
