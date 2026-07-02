@@ -61,11 +61,11 @@ else if (strpos($playerStep, "upgrade_2@") !== false) {
     $parts = explode("@", $playerStep);
     $itemName = $parts[1] ?? '';
     $nextLevel = (int)($parts[2] ?? 0);
-bot('sendMessage', ['chat_id' => $chat_id, 'text' => "Debug Upgrade: Step = " . $playerStep . " | Text = " . $text]);
+    
     if ($text == "yes") {
         $item = getUpgradeItem($conn, $itemName);
         if ($item) {
-            $result = executeUpgrade($conn, $chat_id, $item, $nextLevel);
+            $result = executeUpgrade($conn, $chat_id, $item, $nextLevel, $cityBuildingsTable, $cityCampsTable, $buildingsTable, $campsTable, $cityItemsTable, $cityPeopleTable, $citySoldiersTable);
             $msg = $result['success'] ? 
                 "✅ ارتقا با موفقیت انجام شد!\n{$item['persian_name']} به سطح {$nextLevel} رسید." : 
                 "❌ " . ($result['message'] ?? 'خطا');
