@@ -7,6 +7,7 @@ if ($text == "[⚒]- افزودن آیتم ارتقا"  && $theAdminStep == "non
         'chat_id' => $chat_id,
         'text' => "📌 نام انگلیسی آیتم ارتقا را وارد کنید (مثال: factory، barracks، mine):",
         'parse_mode' => "HTML",
+        'reply_to_message_id' => $message_id,
         'reply_markup' => $adminBack,
     ]);
     $conn->query("UPDATE `$adminsTable` SET `step`='add_upgrade_1' WHERE `id`='{$from_id}' LIMIT 1");
