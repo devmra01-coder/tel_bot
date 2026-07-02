@@ -514,7 +514,7 @@ function getUpgradeButtons($conn) {
     $q = mysqli_query($conn, "SELECT * FROM `upgrade_list` WHERE `active`=1");
     $buttons = [];
     while ($item = mysqli_fetch_assoc($q)) {
-        $buttons[] = [['text' => "⚒ " . $item['persian_name'], 'callback_data' => 'upgrade_' . $item['item_name']]];
+        $buttons[] = [['text' => "⚒ " . $item['persian_name'], 'callback_data' => $item['item_name']]];
     }
     $buttons[] = [['text' => '🔙 بازگشت', 'callback_data' => 'shoping']];
     return $buttons;
