@@ -524,7 +524,15 @@ function getUpgradeItem($conn, $itemName) {
     $q = mysqli_query($conn, "SELECT * FROM `upgrade_list` WHERE `item_name` = '{$itemName}' LIMIT 1");
     return mysqli_fetch_assoc($q);
 }
+// دریافت آیتم ارتقا
+function getUpgradeItem($conn, $itemName) {
+    $itemName = mysqli_real_escape_string($conn, $itemName);
+    $q = mysqli_query($conn, "SELECT * FROM `upgrade_list` WHERE `item_name` = '{$itemName}' AND `active`=1 LIMIT 1");
+    $item = mysqli_fetch_assoc($q);
+    return $item;
+}
 
+// سطح فعلی
 function getCurrentLevel($conn, $city_id, $itemName) {
     global $cityBuildingsTable, $cityCampsTable;
     $tables = [$cityBuildingsTable, $cityCampsTable];
@@ -538,23 +546,24 @@ function getCurrentLevel($conn, $city_id, $itemName) {
     return 1;
 }
 
+// چک وضعیت ارتقا
 function checkUpgradeStatus($conn, $city_id, $item) {
     $status = ['can_upgrade' => true, 'message' => ''];
     $current = getCurrentLevel($conn, $city_id, $item['item_name']);
 
-    if ($item['max_limit'] > 0 && $current >= $item['max_limit']) {
+    if (!empty($item['max_limit']) && $item['max_limit'] > 0 && $current >= $item['max_limit']) {
         $status['can_upgrade'] = false;
         $status['message'] = "به حداکثر سطح رسیده است.";
         return $status;
     }
 
-    if ($item['one_time'] == 1 && $current >= 1) {
+    if (!empty($item['one_time']) && $item['one_time'] == 1 && $current >= 1) {
         $status['can_upgrade'] = false;
         $status['message'] = "این مورد فقط یک بار قابل ارتقا است.";
         return $status;
     }
 
-    if ($item['daily_limit'] > 0) {
+    if (!empty($item['daily_limit']) && $item['daily_limit'] > 0) {
         if (getDailyUpgrades($conn, $city_id, $item['item_name']) >= $item['daily_limit']) {
             $status['can_upgrade'] = false;
             $status['message'] = "محدودیت روزانه ارتقا تمام شده است.";
@@ -565,11 +574,13 @@ function checkUpgradeStatus($conn, $city_id, $item) {
     return $status;
 }
 
+// هزینه ارتقا
 function getUpgradeCosts($conn, $item, $nextLevel) {
-    $costsJson = json_decode($item['upgrade_costs'], true);
+    $costsJson = json_decode($item['upgrade_costs'] ?? '{}', true);
     return $costsJson[$nextLevel] ?? $costsJson[array_key_last($costsJson)] ?? ['gold' => 1000];
 }
 
+// اجرای ارتقا
 function executeUpgrade($conn, $city_id, $item, $nextLevel) {
     $costs = getUpgradeCosts($conn, $item, $nextLevel);
 
@@ -577,22 +588,24 @@ function executeUpgrade($conn, $city_id, $item, $nextLevel) {
         return ['success' => false, 'message' => 'منابع کافی نیست.'];
     }
 
-    // ثبت ارتقا
+    // اعمال ارتقا
     global $cityBuildingsTable, $cityCampsTable;
     $tables = [$cityBuildingsTable, $cityCampsTable];
     foreach ($tables as $table) {
-        if (mysqli_num_rows(mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '{$item['item_name']}'")) > 0) {
+        $q = mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '{$item['item_name']}'");
+        if (mysqli_num_rows($q) > 0) {
             $newValue = "{$item['persian_name']}@{$nextLevel}";
             mysqli_query($conn, "UPDATE `$table` SET `{$item['item_name']}` = '{$newValue}' WHERE `city id`='{$city_id}' LIMIT 1");
             break;
         }
     }
 
-    if ($item['daily_limit'] > 0) logUpgrade($conn, $city_id, $item['item_name']);
+    if (!empty($item['daily_limit']) && $item['daily_limit'] > 0) {
+        logUpgrade($conn, $city_id, $item['item_name']);
+    }
 
     return ['success' => true];
 }
-
 function getDailyUpgrades($conn, $city_id, $item_name) {
     $today = date('Y-m-d');
     $q = mysqli_query($conn, "SELECT COUNT(*) as cnt FROM `upgrade_daily_log` WHERE `city_id`='{$city_id}' AND `item_name`='{$item_name}' AND `date`='{$today}'");
