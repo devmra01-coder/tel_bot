@@ -576,22 +576,32 @@ function getUpgradeCosts($conn, $item, $nextLevel) {
     return $costsJson[$nextLevel] ?? $costsJson[array_key_last($costsJson)] ?? ['gold' => 1000];
 }
 
-// اجرای ارتقا
-function executeUpgrade($conn, $city_id, $item, $nextLevel) {
+function executeUpgrade($conn, $city_id, $item, $nextLevel, $cityBuildingsTable, $cityCampsTable, $buildingsTable, $campsTable, $cityItemsTable, $cityPeopleTable, $citySoldiersTable) {
     $costs = getUpgradeCosts($conn, $item, $nextLevel);
 
     if (!deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTable, $citySoldiersTable)) {
-        return ['success' => false, 'message' => 'منابع کافی نیست.'];
+        return ['success' => false, 'message' => 'منابع کافی برای ارتقا وجود ندارد.'];
     }
 
-    // اعمال ارتقا
-    global $cityBuildingsTable, $cityCampsTable;
+    // اعمال ارتقا (مثل addItemToCity)
     $tables = [$cityBuildingsTable, $cityCampsTable];
     foreach ($tables as $table) {
-        $q = mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '{$item['item_name']}'");
+        $q = mysqli_query($conn, "SHOW COLUMNS FROM `{$table}` LIKE '{$item['item_name']}'");
         if (mysqli_num_rows($q) > 0) {
-            $newValue = "{$item['persian_name']}@{$nextLevel}";
-            mysqli_query($conn, "UPDATE `$table` SET `{$item['item_name']}` = '{$newValue}' WHERE `city id`='{$city_id}' LIMIT 1");
+            $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `{$item['item_name']}` FROM `{$table}` WHERE `city id` = '{$city_id}' LIMIT 1"));
+            $currentData = $row[$item['item_name']] ?? "";
+
+            if (empty($currentData)) {
+                $persianName = $item['persian_name'] ?? $item['item_name'];
+                $newValue = "{$persianName}@{$nextLevel}";
+            } else {
+                $parts = explode("@", $currentData);
+                $persian = $parts[0] ?? $item['item_name'];
+                $currentLevel = (int)($parts[1] ?? 1);
+                $newValue = "{$persian}@{$nextLevel}";
+            }
+
+            $conn->query("UPDATE `{$table}` SET `{$item['item_name']}` = '{$newValue}' WHERE `city id` = '{$city_id}' LIMIT 1");
             break;
         }
     }
