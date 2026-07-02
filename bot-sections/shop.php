@@ -64,37 +64,19 @@ else if (strpos($playerStep, "upgrade_2@") !== false) {
 
     if ($text == "yes") {
         $item = getUpgradeItem($conn, $itemName);
-        if (!$item) {
+        if ($item) {
+            $result = executeUpgrade($conn, $chat_id, $item, $nextLevel);
+            $msg = $result['success'] ? 
+                "✅ ارتقا با موفقیت انجام شد!\n{$item['persian_name']} به سطح {$nextLevel} رسید." : 
+                "❌ " . ($result['message'] ?? 'خطا');
             bot('EditMessageText', [
                 'chat_id' => $chat_id,
                 'message_id' => $message_id,
-                'text' => "❌ آیتم یافت نشد.",
+                'text' => $msg,
                 'parse_mode' => 'HTML'
             ]);
-        } else {
-            $result = executeUpgrade($conn, $chat_id, $item, $nextLevel);
-
-            if ($result['success']) {
-                bot('EditMessageText', [
-                    'chat_id' => $chat_id,
-                    'message_id' => $message_id,
-                    'text' => "MMDGOLI",
-                    // 'text' => "✅ ارتقا با موفقیت انجام شد!\n" . 
-                    //           ($item['persian_name'] ?? $itemName) . 
-                    //           " به سطح {$nextLevel} رسید.",
-                    'parse_mode' => 'HTML'
-                ]);
-            } else {
-                bot('EditMessageText', [
-                    'chat_id' => $chat_id,
-                    'message_id' => $message_id,
-                    'text' => "❌ " . ($result['message'] ?? 'خطای ناشناخته'),
-                    'parse_mode' => 'HTML'
-                ]);
-            }
-        }
-    } 
-    else if ($text == "no") {
+        } 
+    }else if ($text == "no") {
         bot('EditMessageText', [
             'chat_id' => $chat_id,
             'message_id' => $message_id,
