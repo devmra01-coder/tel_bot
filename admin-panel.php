@@ -130,23 +130,30 @@ if (in_array($from_id, $admins)) {
     //----------
     include './admin-panel-forms/add-item.php';
     include './admin-panel-forms/delete-item.php';
+    include './admin-panel-forms/updata-item.php';
     //----------
     include './admin-panel-forms/add-soldier.php';
     include './admin-panel-forms/delete-soldier.php';
+    include './admin-panel-forms/updata-soldier.php';
     //----------
     include './admin-panel-forms/add-person.php';
     include './admin-panel-forms/delete-person.php';
+    include './admin-panel-forms/updata-person.php';
     //----------
     include './admin-panel-forms/add-building.php';
     include './admin-panel-forms/delete-building.php';
+    include './admin-panel-forms/updata-building.php';
     //----------
     include './admin-panel-forms/add-camp.php';
     include './admin-panel-forms/delete-camp.php';
+    include './admin-panel-forms/updata-camp.php';
     //----------  
     include './admin-panel-forms/add-shop.php';
     include './admin-panel-forms/delete-shop.php';
+    include './admin-panel-forms/updata-shop.php';
     //----------   
     include './admin-panel-forms/add-upgrade.php';
     include './admin-panel-forms/delete-upgrade.php';
+    include './admin-panel-forms/updata-upgrade.php';
     //----------  
 }
