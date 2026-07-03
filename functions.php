@@ -321,7 +321,7 @@ function checkShopItemStatus($conn, $city_id, $item, $requestedQty = 1) {
     }
 
     // ۲. محدودیت کلی (max_limit)
-    if (!empty($item['is_limited']) && $item['max_limit'] > 0) {
+    if (!empty($item['max_limit']) && $item['max_limit'] > 0) {
         $owned = getCityItemTotal($conn, $city_id, $item['item_name']);
         if ($owned + $requestedQty > $item['max_limit']) {
             $status['can_buy'] = false;
