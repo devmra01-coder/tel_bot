@@ -213,7 +213,7 @@ if (in_array($from_id, $admins)) {
         array_push($editSelector, $row["english name"]);
     }
 
-    if (strpos($text, "Set ") !== false) {
+    if (strpos($text, "set ") !== false) {
         $idm = str_replace("set ", '', $text);
         $selector = preg_replace('/\d+/u', '', $idm);
         $selector = trim($selector);
