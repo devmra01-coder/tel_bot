@@ -473,7 +473,7 @@ function deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTab
         $currentQty = (int)($parts[1] ?? 0);
 
         // لاگ برای دیباگ (اختیاری)
-        bot('sendMessage', ['chat_id' => $city_id, 'text' => "Debug: $itemName = $currentQty / نیاز = $amount"]);
+        //bot('sendMessage', ['chat_id' => $city_id, 'text' => "Debug: $itemName = $currentQty / نیاز = $amount"]);
 
         if ($currentQty < $amount) {
             return false; // موجودی کافی نیست
