@@ -451,8 +451,10 @@ function deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTab
         $table = null;
         $currentData = "";
 
-        // جستجو در جداول
-        foreach ([$cityItemsTable, $cityPeopleTable, $citySoldiersTable] as $t) {
+        // جستجوی دقیق در جداول
+        $possibleTables = [$cityItemsTable, $cityPeopleTable, $citySoldiersTable];
+
+        foreach ($possibleTables as $t) {
             $q = mysqli_query($conn, "SHOW COLUMNS FROM `$t` LIKE '{$itemName}'");
             if (mysqli_num_rows($q) > 0) {
                 $table = $t;
@@ -462,14 +464,19 @@ function deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTab
             }
         }
 
-        if (!$table) return false;
+        if (!$table) {
+            return false; // منبع پیدا نشد
+        }
 
         $parts = explode("@", $currentData);
         $persian = $parts[0] ?? $itemName;
         $currentQty = (int)($parts[1] ?? 0);
 
+        // لاگ برای دیباگ (اختیاری)
+        bot('sendMessage', ['chat_id' => $city_id, 'text' => "Debug: $itemName = $currentQty / نیاز = $amount"]);
+
         if ($currentQty < $amount) {
-            return false;
+            return false; // موجودی کافی نیست
         }
 
         $newQty = $currentQty - $amount;
