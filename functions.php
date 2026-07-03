@@ -302,17 +302,26 @@ function getShopBuyButtons($conn, $city_id) {
     $buttons[] = [['text' => '🔙 بازگشت', 'callback_data' => 'shoping']];
     return $buttons;
 }
-
 function checkShopItemStatus($conn, $city_id, $item, $requestedQty = 1) {
     $status = ['can_buy' => true, 'message' => ''];
 
-    if ($item['one_time'] == 1 && getOneTimePurchaseStatus($conn, $city_id, $item['item_name'])) {
+    if (!$item) {
         $status['can_buy'] = false;
-        $status['message'] = "این آیتم فقط یک بار قابل خرید است.";
+        $status['message'] = "آیتم یافت نشد.";
         return $status;
     }
 
-    if ($item['is_limited'] && $item['max_limit'] > 0) {
+    // ۱. محدودیت تک‌باره
+    if (!empty($item['one_time']) && $item['one_time'] == 1) {
+        if (getOneTimePurchaseStatus($conn, $city_id, $item['item_name'])) {
+            $status['can_buy'] = false;
+            $status['message'] = "این آیتم فقط یک بار قابل خرید است.";
+            return $status;
+        }
+    }
+
+    // ۲. محدودیت کلی (max_limit)
+    if (!empty($item['is_limited']) && $item['max_limit'] > 0) {
         $owned = getCityItemTotal($conn, $city_id, $item['item_name']);
         if ($owned + $requestedQty > $item['max_limit']) {
             $status['can_buy'] = false;
@@ -321,7 +330,8 @@ function checkShopItemStatus($conn, $city_id, $item, $requestedQty = 1) {
         }
     }
 
-    if ($item['daily_limit'] > 0) {
+    // ۳. محدودیت روزانه
+    if (!empty($item['daily_limit']) && $item['daily_limit'] > 0) {
         $daily = getDailyBought($conn, $city_id, $item['item_name']);
         if ($daily + $requestedQty > $item['daily_limit']) {
             $status['can_buy'] = false;
@@ -330,13 +340,16 @@ function checkShopItemStatus($conn, $city_id, $item, $requestedQty = 1) {
         }
     }
 
+    // ۴. پیش‌نیازها
     if (!empty($item['requirements'])) {
         $reqs = json_decode($item['requirements'], true);
-        foreach ($reqs as $reqItem => $reqQty) {
-            if (getCityItemTotal($conn, $city_id, $reqItem) < $reqQty) {
-                $status['can_buy'] = false;
-                $status['message'] = "پیش‌نیازها کامل نیست.";
-                return $status;
+        if (is_array($reqs)) {
+            foreach ($reqs as $reqItem => $reqQty) {
+                if (getCityItemTotal($conn, $city_id, $reqItem) < $reqQty) {
+                    $status['can_buy'] = false;
+                    $status['message'] = "پیش‌نیازها کامل نیست.";
+                    return $status;
+                }
             }
         }
     }
