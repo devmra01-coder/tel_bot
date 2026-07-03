@@ -14,6 +14,7 @@ $adminPanel = json_encode([
 $itemsPanel = json_encode([
     'keyboard' => [
         [['text' => "[❌]- حذف آیتم"], ['text' => "[➕]- افزودن آیتم"]],
+                          [['text' => "[✏️]- ویرایش آیتم"]],
         [['text' => "🔙"]],
     ],
     'resize_keyboard' => true,
@@ -22,6 +23,7 @@ $itemsPanel = json_encode([
 $ShopPanel = json_encode([
     'keyboard' => [
         [['text' => "[❌]- حذف آیتم خرید"], ['text' => "[🛒]- افزودن آیتم خرید"]],
+                         [['text' => "[✏️]- ویرایش آیتم خرید"]],
         [['text' => "🔙"]],
     ],
     'resize_keyboard' => true,
@@ -30,6 +32,7 @@ $ShopPanel = json_encode([
 $UpgradePanel = json_encode([
     'keyboard' => [
         [['text' => "[❌]- حذف آیتم ارتقا"], ['text' => "افزودن آیتم ارتقا"]],
+                            [['text' => "[✏️]- ویرایش آیتم ارتقا"]],
         [['text' => "🔙"]],
     ],
     'resize_keyboard' => true,
@@ -37,7 +40,7 @@ $UpgradePanel = json_encode([
 ]);
 $soldierPanel = json_encode([
     'keyboard' => [
-        [['text' => "[❌]- حذف سرباز"], ['text' => "[⚔️]- افزودن سرباز"]],
+        [['text' => "[❌]- حذف سرباز"], ['text' => "[⚔️]- افزودن سرباز"]],[['text' => "[✏️]- ویرایش سرباز"]],
         [['text' => "🔙"]],
     ],
     'resize_keyboard' => true,
@@ -45,7 +48,7 @@ $soldierPanel = json_encode([
 ]);
 $peoplePanel = json_encode([
     'keyboard' => [
-        [['text' => "[❌]- حذف شخصیت"], ['text' => "[👤]- افزودن شخصیت"]],
+        [['text' => "[❌]- حذف شخصیت"], ['text' => "[👤]- افزودن شخصیت"]],[['text' => "[✏️]- ویرایش شخصیت"]],
         [['text' => "🔙"]],
     ],
     'resize_keyboard' => true,
@@ -53,7 +56,7 @@ $peoplePanel = json_encode([
 ]);
 $buildingPanel = json_encode([
     'keyboard' => [
-        [['text' => "[❌]- حذف ساختمان"], ['text' => "[🏗️]- افزودن ساختمان"]],
+        [['text' => "[❌]- حذف ساختمان"], ['text' => "[🏗️]- افزودن ساختمان"]],[['text' => "[✏️]- ویرایش ساختمان"]],
         [['text' => "🔙"]],
     ],
     'resize_keyboard' => true,
@@ -61,7 +64,7 @@ $buildingPanel = json_encode([
 ]);
 $campsPanel = json_encode([
     'keyboard' => [
-        [['text' => "[❌]- حذف کمپ"], ['text' => "[⛺️]- افزودن کمپ"]],
+        [['text' => "[❌]- حذف کمپ"], ['text' => "[⛺️]- افزودن کمپ"]],[['text' => "[✏️]- ویرایش کمپ"]],
         [['text' => "🔙"]],
     ],
     'resize_keyboard' => true,
