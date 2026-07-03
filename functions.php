@@ -445,15 +445,38 @@ function formatCosts($costs) {
 // کسر منابع
 // ===============================================
 function deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTable, $citySoldiersTable) {
+    // مرحله ۱: اول همه منابع را چک کن (بدون کسر)
+    foreach ($costs as $itemName => $amount) {
+        if ($amount <= 0) continue;
+
+        $table = null;
+        $currentQty = 0;
+
+        $possibleTables = [$cityItemsTable, $cityPeopleTable, $citySoldiersTable];
+        foreach ($possibleTables as $t) {
+            $q = mysqli_query($conn, "SHOW COLUMNS FROM `$t` LIKE '{$itemName}'");
+            if (mysqli_num_rows($q) > 0) {
+                $table = $t;
+                $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `{$itemName}` FROM `$t` WHERE `city id` = '{$city_id}' LIMIT 1"));
+                $parts = explode("@", $row[$itemName] ?? "0@0");
+                $currentQty = (int)($parts[1] ?? 0);
+                break;
+            }
+        }
+
+        if (!$table || $currentQty < $amount) {
+            return false; // حداقل یکی از منابع کافی نیست
+        }
+    }
+
+    // مرحله ۲: اگر همه کافی بودند، حالا کسر کن
     foreach ($costs as $itemName => $amount) {
         if ($amount <= 0) continue;
 
         $table = null;
         $currentData = "";
 
-        // جستجوی دقیق در جداول
         $possibleTables = [$cityItemsTable, $cityPeopleTable, $citySoldiersTable];
-
         foreach ($possibleTables as $t) {
             $q = mysqli_query($conn, "SHOW COLUMNS FROM `$t` LIKE '{$itemName}'");
             if (mysqli_num_rows($q) > 0) {
@@ -464,29 +487,20 @@ function deductAllCosts($conn, $city_id, $costs, $cityItemsTable, $cityPeopleTab
             }
         }
 
-        if (!$table) {
-            return false; // منبع پیدا نشد
-        }
+        if (!$table) continue;
 
         $parts = explode("@", $currentData);
         $persian = $parts[0] ?? $itemName;
         $currentQty = (int)($parts[1] ?? 0);
-
-        // لاگ برای دیباگ (اختیاری)
-        //bot('sendMessage', ['chat_id' => $city_id, 'text' => "Debug: $itemName = $currentQty / نیاز = $amount"]);
-
-        if ($currentQty < $amount) {
-            return false; // موجودی کافی نیست
-        }
 
         $newQty = $currentQty - $amount;
         $newValue = "{$persian}@{$newQty}";
 
         $conn->query("UPDATE `{$table}` SET `{$itemName}` = '{$newValue}' WHERE `city id` = '{$city_id}' LIMIT 1");
     }
+
     return true;
 }
-
 // ===============================================
 // اضافه کردن آیتم به شهر
 // ===============================================
