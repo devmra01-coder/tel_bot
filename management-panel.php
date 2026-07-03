@@ -213,7 +213,7 @@ if (in_array($from_id, $admins)) {
         array_push($editSelector, $row["english name"]);
     }
 
-    if (strpos($text, "set ") !== false) {
+    if (strpos($text, "Set ") !== false) {
         $idm = str_replace("set ", '', $text);
         $selector = preg_replace('/\d+/u', '', $idm);
         $selector = trim($selector);
@@ -269,6 +269,10 @@ if (in_array($from_id, $admins)) {
         $died = 0;
         $mySoldiersNum = 1;
         $myPeopleNum = 1;
+
+        $today = date('Y-m-d');
+        $conn->query("DELETE FROM `shop_daily_log` WHERE `city_id` = '{$chat_id}' AND `date` = '{$today}'");
+        $conn->query("DELETE FROM `upgrade_daily_log` WHERE `city_id` = '{$chat_id}' AND `date` = '{$today}'");
 
         foreach ($citySoldiers as $soldiers) {
             foreach ($soldiers as $soldier) {
