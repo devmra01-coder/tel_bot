@@ -10,4 +10,4 @@ WORKDIR /app
  
 COPY . /app
  
-CMD php -S 0.0.0.0:${PORT:-8080} index.php
+CMD php -S 0.0.0.0:${PORT:-8080} bot.php
