@@ -8,64 +8,65 @@ $port = 14319;
         
 $conn = mysqli_connect($serverName, $userName, $password, $dbName, $port);
 
-
+ 
 if ($conn->connect_error) {
     die("خطا در اتصال: " . $conn->connect_error);
 }
 
-// ===================== دریافت همه جداول =====================
+$conn->query("SET NAMES utf8mb4");
+
+// ===================== ساخت فایل SQL =====================
+$filename = 'full_backup_' . date('Y-m-d_H-i-s') . '.sql';
+
+header('Content-Type: text/plain; charset=utf-8');
+header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+// شروع فایل SQL
+echo "-- Backup Database: $db\n";
+echo "-- Generated: " . date('Y-m-d H:i:s') . "\n\n";
+echo "SET FOREIGN_KEY_CHECKS=0;\n\n";
+
 $tables = [];
 $result = $conn->query("SHOW TABLES");
 while ($row = $result->fetch_array()) {
     $tables[] = $row[0];
 }
 
-// ===================== شروع دانلود ZIP =====================
-$zipname = 'full_database_export_' . date('Y-m-d_H-i-s') . '.zip';
-$zip = new ZipArchive();
-$zip->open($zipname, ZipArchive::CREATE | ZipArchive::OVERWRITE);
-
-// برای هر جدول یک فایل CSV جدا بساز
 foreach ($tables as $table) {
-    // دریافت اسم همه ستون‌ها
-    $columns = [];
-    $col_result = $conn->query("SHOW COLUMNS FROM `$table`");
-    while ($col = $col_result->fetch_assoc()) {
-        $columns[] = $col['Field'];
-    }
+    // CREATE TABLE
+    $create = $conn->query("SHOW CREATE TABLE `$table`");
+    $create_row = $create->fetch_assoc();
+    echo "\n-- Table structure for table `$table`\n";
+    echo $create_row['Create Table'] . ";\n\n";
 
-    // ایجاد فایل CSV موقت در حافظه
-    $csv_content = '';
-    $output = fopen('php://memory', 'w');
-    
-    // هدر ستون‌ها
-    fputcsv($output, $columns);
-    
-    // داده‌ها
-    $sql = "SELECT * FROM `$table`";
-    $data_result = $conn->query($sql);
-    
-    while ($row = $data_result->fetch_assoc()) {
-        fputcsv($output, $row);
+    // INSERT DATA
+    $data = $conn->query("SELECT * FROM `$table`");
+    if ($data && $data->num_rows > 0) {
+        echo "-- Dumping data for table `$table`\n";
+        
+        $columns = [];
+        $fields = $data->fetch_fields();
+        foreach ($fields as $field) {
+            $columns[] = '`' . $field->name . '`';
+        }
+        
+        $values = [];
+        while ($row = $data->fetch_row()) {
+            $escaped = array_map(function($v) use ($conn) {
+                if ($v === null) return 'NULL';
+                return "'" . $conn->real_escape_string($v) . "'";
+            }, $row);
+            
+            $values[] = "(" . implode(", ", $escaped) . ")";
+        }
+        
+        echo "INSERT INTO `$table` (" . implode(", ", $columns) . ") VALUES\n";
+        echo implode(",\n", $values) . ";\n\n";
     }
-    
-    rewind($output);
-    $csv_content = stream_get_contents($output);
-    fclose($output);
-    
-    // اضافه کردن به زیپ
-    $zip->addFromString($table . '.csv', $csv_content);
 }
 
-$zip->close();
+echo "SET FOREIGN_KEY_CHECKS=1;\n";
+echo "-- Backup completed successfully.\n";
 
-// ===================== ارسال فایل زیپ برای دانلود =====================
-header('Content-Type: application/zip');
-header('Content-Disposition: attachment; filename="' . $zipname . '"');
-header('Content-Length: ' . filesize($zipname));
-readfile($zipname);
-
-// پاک کردن فایل موقت
-unlink($zipname);
 $conn->close();
 ?>
