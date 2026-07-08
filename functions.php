@@ -470,13 +470,13 @@ function calculateTotalCost($item, $quantity) {
  * @param mysqli $conn
  * @param array|string $costs  آرایه JSON هزینه‌ها (مثلاً {"gold":500, "wood":200})
  * @return string
- */
+ */ 
 function formatCosts($conn, $costs) {
     if (empty($costs)) {
         return "بدون هزینه";
     }
 
-    // اگر به صورت JSON string آمد، تبدیل به آرایه شود
+    // تبدیل JSON string به آرایه در صورت نیاز
     if (is_string($costs)) {
         $costs = json_decode($costs, true);
     }
@@ -487,19 +487,21 @@ function formatCosts($conn, $costs) {
 
     $str = "";
 
-    foreach ($costs as $res => $amt) {
-        if ($amt <= 0) continue;
+    foreach ($costs as $englishName => $amount) {
+        if ((int)$amount <= 0) continue;
 
-        // جستجو در جدول shop_items برای پیدا کردن نام فارسی منبع
-        $query = mysqli_query($conn, "SELECT `persian name` FROM `$itemsTable` 
-                                      WHERE `english name` = '" . mysqli_real_escape_string($conn, $res) . "' 
+        // جستجو با نام ستون‌های دارای فاصله
+        $query = mysqli_query($conn, "SELECT `persian name` 
+                                      FROM `$itemsTable` 
+                                      WHERE `english name` = '" . mysqli_real_escape_string($conn, $englishName) . "' 
                                       LIMIT 1");
-        
+
         $row = mysqli_fetch_assoc($query);
         
-        $displayName = $row['persian name'] ?? $res; // اگر نام فارسی پیدا نشد، همان نام انگلیسی نمایش داده شود
+        // نمایش نام فارسی یا انگلیسی (fallback)
+        $displayName = !empty($row['persian name']) ? $row['persian name'] : $englishName;
 
-        $str .= "• {$displayName}: {$amt}\n";
+        $str .= "• {$displayName}: {$amount}\n";
     }
 
     return trim($str) ?: "بدون هزینه";
