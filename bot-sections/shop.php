@@ -110,14 +110,14 @@ else if ($playerStep == "shop_buy_1" && $data) {
     $totalCost = calculateTotalCost($item, 1);
     $status = checkShopItemStatus($conn, $chat_id, $item);
     $text = "📦 <b>" . ($item['persian_name'] ?? $itemName) . "</b>\n\n";
-    $text .=  formatCosts($conn ,$totalCost) . "\n\n";
+    $text .=  formatCosts($totalCost) . "\n\n";
 
     if (!$status['can_buy']) {
         $text .= "❌ امکان خرید وجود ندارد:\n" . $status['message'];
         $keyboard = json_encode([['inline_keyboard' => [[['text' => '🔙 بازگشت', 'callback_data' => 'shop_buy']]]]]);
     } else {
         $text .= "🧮 **چند واحد می‌خواهید بخرید؟**";
-        $keyboard =  json_encode([['inline_keyboard' => [[['text' => '🔙 بازگشت', 'callback_data' => 'shop_buy']]]]]);
+        $keyboard = $back;
         $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_2@{$itemName}' WHERE `city id`='{$chat_id}' LIMIT 1");
     }
 
@@ -131,7 +131,7 @@ else if (strpos($playerStep, "shop_buy_2@") !== false && is_numeric($text) && (i
 
     $item = getShopItem($conn, $itemName);
     if (!$item) {
-        bot('sendMessage', ['chat_id' => $chat_id, 'text' => "❌ آیتم یافت نشد.", 'reply_markup' => $back ]);
+        bot('sendMessage', ['chat_id' => $chat_id, 'text' => "❌ آیتم یافت نشد."]);
         return;
     }
 
@@ -169,8 +169,7 @@ else if (strpos($playerStep, "shop_buy_3@") !== false) {
                 'chat_id' => $chat_id,
                 'message_id' => $message_id,
                 'text' => "❌ آیتم یافت نشد.",
-                'parse_mode' => 'HTML' ,
-                'reply_markup' => $back
+                'parse_mode' => 'HTML'
             ]);
         } else {
             $result = executePurchase($conn, $chat_id, $item, $qty, $cityItemsTable, $cityBuildingsTable, $cityPeopleTable, $citySoldiersTable, $cityCampsTable);
