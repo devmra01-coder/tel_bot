@@ -464,17 +464,45 @@ function calculateTotalCost($item, $quantity) {
     return $total;
 }
 
-// نمایش هزینه‌ها
-function formatCosts($costs) {
-    if (empty($costs)) return "بدون هزینه";
+/**
+ * نمایش هزینه‌ها با نام فارسی منابع
+ * 
+ * @param mysqli $conn
+ * @param array|string $costs  آرایه JSON هزینه‌ها (مثلاً {"gold":500, "wood":200})
+ * @return string
+ */
+function formatCosts($conn, $costs) {
+    if (empty($costs)) {
+        return "بدون هزینه";
+    }
+
+    // اگر به صورت JSON string آمد، تبدیل به آرایه شود
+    if (is_string($costs)) {
+        $costs = json_decode($costs, true);
+    }
+
+    if (!is_array($costs) || empty($costs)) {
+        return "بدون هزینه";
+    }
 
     $str = "";
+
     foreach ($costs as $res => $amt) {
-        if ($amt > 0) {
-            $str .= "• {$res}: {$amt}\n";
-        }
+        if ($amt <= 0) continue;
+
+        // جستجو در جدول shop_items برای پیدا کردن نام فارسی منبع
+        $query = mysqli_query($conn, "SELECT persian_name FROM `$itemsTable` 
+                                      WHERE `persian name` = '" . mysqli_real_escape_string($conn, $res) . "' 
+                                      LIMIT 1");
+        
+        $row = mysqli_fetch_assoc($query);
+        
+        $displayName = $row[`persian name`] ?? $res; // اگر نام فارسی پیدا نشد، همان نام انگلیسی نمایش داده شود
+
+        $str .= "• {$displayName}: {$amt}\n";
     }
-    return $str;
+
+    return trim($str) ?: "بدون هزینه";
 }
 
 // ===============================================
