@@ -491,8 +491,8 @@ function formatCosts($conn, $costs) {
         if ($amt <= 0) continue;
 
         // جستجو در جدول shop_items برای پیدا کردن نام فارسی منبع
-        $query = mysqli_query($conn, "SELECT persian_name FROM `$itemsTable` 
-                                      WHERE `persian name` = '" . mysqli_real_escape_string($conn, $res) . "' 
+        $query = mysqli_query($conn, "SELECT `persian name` FROM `$itemsTable` 
+                                      WHERE `english name` = '" . mysqli_real_escape_string($conn, $res) . "' 
                                       LIMIT 1");
         
         $row = mysqli_fetch_assoc($query);
