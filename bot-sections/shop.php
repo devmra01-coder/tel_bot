@@ -131,7 +131,7 @@ else if (strpos($playerStep, "shop_buy_2@") !== false && is_numeric($text) && (i
 
     $item = getShopItem($conn, $itemName);
     if (!$item) {
-        bot('sendMessage', ['chat_id' => $chat_id, 'text' => "❌ آیتم یافت نشد.", , 'reply_markup' => $back ]);
+        bot('sendMessage', ['chat_id' => $chat_id, 'text' => "❌ آیتم یافت نشد.", 'reply_markup' => $back ]);
         return;
     }
 
