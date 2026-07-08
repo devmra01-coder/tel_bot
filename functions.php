@@ -470,41 +470,17 @@ function calculateTotalCost($item, $quantity) {
  * @param mysqli $conn
  * @param array|string $costs  آرایه JSON هزینه‌ها (مثلاً {"gold":500, "wood":200})
  * @return string
- */ 
-function formatCosts($conn, $costs) {
-    if (empty($costs)) {
-        return "بدون هزینه";
-    }
-
-    // تبدیل JSON string به آرایه در صورت نیاز
-    if (is_string($costs)) {
-        $costs = json_decode($costs, true);
-    }
-
-    if (!is_array($costs) || empty($costs)) {
-        return "بدون هزینه";
-    }
+ */ // نمایش هزینه‌ها
+function formatCosts($costs) {
+    if (empty($costs)) return "بدون هزینه";
 
     $str = "";
-
-    foreach ($costs as $englishName => $amount) {
-        if ((int)$amount <= 0) continue;
-
-        // جستجو با نام ستون‌های دارای فاصله
-        $query = mysqli_query($conn, "SELECT `persian name` 
-                                      FROM `$itemsTable` 
-                                      WHERE `english name` = '" . mysqli_real_escape_string($conn, $englishName) . "' 
-                                      LIMIT 1");
-
-        $row = mysqli_fetch_assoc($query);
-        
-        // نمایش نام فارسی یا انگلیسی (fallback)
-        $displayName = !empty($row['persian name']) ? $row['persian name'] : $englishName;
-
-        $str .= "• {$displayName}: {$amount}\n";
+    foreach ($costs as $res => $amt) {
+        if ($amt > 0) {
+            $str .= "• {$res}: {$amt}\n";
+        }
     }
-
-    return trim($str) ?: "بدون هزینه";
+    return $str;
 }
 
 // ===============================================
