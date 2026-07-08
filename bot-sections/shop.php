@@ -110,14 +110,14 @@ else if ($playerStep == "shop_buy_1" && $data) {
     $totalCost = calculateTotalCost($item, 1);
     $status = checkShopItemStatus($conn, $chat_id, $item);
     $text = "📦 <b>" . ($item['persian_name'] ?? $itemName) . "</b>\n\n";
-    $text .= formatCosts($conn, $item['costs']) . "\n\n";
+    $text .= formatCosts($totalCost) . "\n\n";
 
     if (!$status['can_buy']) {
         $text .= "❌ امکان خرید وجود ندارد:\n" . $status['message'];
         $keyboard = json_encode([['inline_keyboard' => [[['text' => '🔙 بازگشت', 'callback_data' => 'shop_buy']]]]]);
     } else {
         $text .= "🧮 **چند واحد می‌خواهید بخرید؟**";
-        $keyboard = $back;
+        $keyboard = json_encode([['inline_keyboard' => [[['text' => '🔙 بازگشت', 'callback_data' => 'shop_buy']]]]]);
         $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_2@{$itemName}' WHERE `city id`='{$chat_id}' LIMIT 1");
     }
 
