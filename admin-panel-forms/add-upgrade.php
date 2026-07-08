@@ -1,8 +1,5 @@
-<?php
-
-
 // ==================== افزودن به سیستم ارتقا ====================
-if ($text == "افزودن آیتم ارتقا"  && $theAdminStep == "none") {
+if ($text == "افزودن آیتم ارتقا" && $theAdminStep == "none") {
     bot('sendMessage', [
         'chat_id' => $chat_id,
         'text' => "📌 نام انگلیسی آیتم ارتقا را وارد کنید (مثال: factory، barracks، mine):",
@@ -13,30 +10,46 @@ if ($text == "افزودن آیتم ارتقا"  && $theAdminStep == "none") {
     $conn->query("UPDATE `$adminsTable` SET `step`='add_upgrade_1' WHERE `id`='{$from_id}' LIMIT 1");
 }
 
-// مرحله ۱: نام انگلیسی + ایجاد رکورد اولیه
+// مرحله ۱: نام انگلیسی
 else if ($theAdminStep == "add_upgrade_1" && $text != "🔙") {
     $enName = trim($text);
-    
+   
     // ایجاد رکورد اولیه
-    $conn->query("INSERT INTO `upgrade_list` (`item_name`, `persian_name`, `upgrade_costs`, `max_limit`, `daily_limit`, `one_time`) 
+    $conn->query("INSERT INTO `upgrade_list` (`item_name`, `persian_name`, `upgrade_costs`, `max_limit`, `daily_limit`, `one_time`)
                   VALUES ('{$enName}', '{$enName}', '{}', 0, 0, 0)
                   ON DUPLICATE KEY UPDATE `item_name`='{$enName}'");
 
     bot('sendMessage', [
         'chat_id' => $chat_id,
-        'text' => "✅ آیتم ایجاد شد.\n\n📌 حالا هزینه ارتقا سطوح را به فرمت JSON وارد کنید:\n\nمثال:\n<code>{\"1\":{\"gold\":500,\"wood\":200}, \"2\":{\"gold\":900,\"wood\":400}}</code>",
+        'text' => "✅ آیتم با نام انگلیسی <b>{$enName}</b> ایجاد شد.\n\n📌 حالا **نام فارسی** آن را وارد کنید:",
+        'parse_mode' => "HTML",
+        'reply_to_message_id' => $message_id,
+        'reply_markup' => $adminBack,
+    ]);
+    $conn->query("UPDATE `$adminsTable` SET `step`='add_upgrade_persian', `thing`='{$enName}' WHERE `id`='{$from_id}' LIMIT 1");
+}
+
+// مرحله جدید: نام فارسی
+else if ($theAdminStep == "add_upgrade_persian" && $text != "🔙") {
+    $enName = $getAdmins['thing'];
+    $persianName = trim($text);
+
+    $conn->query("UPDATE `upgrade_list` SET `persian_name` = '" . mysqli_real_escape_string($conn, $persianName) . "'
+                  WHERE `item_name` = '{$enName}' LIMIT 1");
+
+    bot('sendMessage', [
+        'chat_id' => $chat_id,
+        'text' => "✅ نام فارسی ثبت شد: <b>{$persianName}</b>\n\n📌 حالا هزینه ارتقا سطوح را به فرمت JSON وارد کنید:\n\nمثال:\n<code>{\"1\":{\"gold\":500,\"wood\":200}, \"2\":{\"gold\":900,\"wood\":400}}</code>",
         'parse_mode' => "HTML",
         'reply_markup' => $adminBack,
     ]);
-
-    $conn->query("UPDATE `$adminsTable` SET `step`='add_upgrade_2', `thing`='{$enName}' WHERE `id`='{$from_id}' LIMIT 1");
+    $conn->query("UPDATE `$adminsTable` SET `step`='add_upgrade_2' WHERE `id`='{$from_id}' LIMIT 1");
 }
 
 // مرحله ۲: هزینه ارتقا
 else if ($theAdminStep == "add_upgrade_2" && $text != "🔙") {
     $enName = $getAdmins['thing'];
-
-    $conn->query("UPDATE `upgrade_list` SET `upgrade_costs` = '" . mysqli_real_escape_string($conn, $text) . "' 
+    $conn->query("UPDATE `upgrade_list` SET `upgrade_costs` = '" . mysqli_real_escape_string($conn, $text) . "'
                   WHERE `item_name` = '{$enName}' LIMIT 1");
 
     bot('sendMessage', [
@@ -45,18 +58,15 @@ else if ($theAdminStep == "add_upgrade_2" && $text != "🔙") {
         'parse_mode' => "HTML",
         'reply_markup' => $adminBack,
     ]);
-
     $conn->query("UPDATE `$adminsTable` SET `step`='add_upgrade_3' WHERE `id`='{$from_id}' LIMIT 1");
 }
 
 // مرحله ۳: محدودیت‌ها + اتمام
 else if ($theAdminStep == "add_upgrade_3" && $text != "🔙") {
     $enName = $getAdmins['thing'];
-
     $max_limit = 0;
     $daily_limit = 0;
     $one_time = 0;
-
     $lines = explode("\n", $text);
     foreach ($lines as $line) {
         $line = trim($line);
@@ -68,8 +78,7 @@ else if ($theAdminStep == "add_upgrade_3" && $text != "🔙") {
             $one_time = (int)str_replace('one_time=', '', $line);
         }
     }
-
-    $conn->query("UPDATE `upgrade_list` SET 
+    $conn->query("UPDATE `upgrade_list` SET
                     `max_limit` = {$max_limit},
                     `daily_limit` = {$daily_limit},
                     `one_time` = {$one_time}
@@ -81,6 +90,5 @@ else if ($theAdminStep == "add_upgrade_3" && $text != "🔙") {
         'parse_mode' => "HTML",
         'reply_markup' => $adminBack,
     ]);
-
     $conn->query("UPDATE `$adminsTable` SET `step`='none', `thing`='' WHERE `id`='{$from_id}' LIMIT 1");
 }
