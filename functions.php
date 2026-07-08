@@ -497,7 +497,7 @@ function formatCosts($conn, $costs) {
         
         $row = mysqli_fetch_assoc($query);
         
-        $displayName = $row[`persian name`] ?? $res; // اگر نام فارسی پیدا نشد، همان نام انگلیسی نمایش داده شود
+        $displayName = $row['persian name'] ?? $res; // اگر نام فارسی پیدا نشد، همان نام انگلیسی نمایش داده شود
 
         $str .= "• {$displayName}: {$amt}\n";
     }
