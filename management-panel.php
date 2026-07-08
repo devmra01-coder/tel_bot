@@ -270,9 +270,8 @@ if (in_array($from_id, $admins)) {
         $mySoldiersNum = 1;
         $myPeopleNum = 1;
 
-        $today = date('Y-m-d');
-        $conn->query("DELETE FROM `shop_daily_log` WHERE `city_id` = '{$chat_id}' AND `date` = '{$today}'");
-        $conn->query("DELETE FROM `upgrade_daily_log` WHERE `city_id` = '{$chat_id}' AND `date` = '{$today}'");
+        $conn->query("DELETE FROM `shop_daily_log` WHERE `city_id` = '{$chat_id}' ");
+        $conn->query("DELETE FROM `upgrade_daily_log` WHERE `city_id` = '{$chat_id}' ");
 
         foreach ($citySoldiers as $soldiers) {
             foreach ($soldiers as $soldier) {
