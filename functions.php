@@ -342,29 +342,52 @@ function checkShopItemStatus($conn, $city_id, $item, $requestedQty = 1) {
 
     // ۴. پیش‌نیازها
     if (!empty($item['requirements'])) {
-        $reqs = json_decode($item['requirements'], true);
-        if (is_array($reqs)) {
-            foreach ($reqs as $reqItem => $reqQty) {
-                if (getCityItemTotal($conn, $city_id, $reqItem) < $reqQty) {
-                    $status['can_buy'] = false;
-                    $status['message'] = "پیش‌نیازها کامل نیست.";
-                    return $status;
-                }
-            }
+        $reqCheck = checkRequirements($conn, $city_id, $item);
+        if (!$reqCheck['status']) {
+            $status['can_buy'] = false;
+            $status['message'] = $reqCheck['message'];
+            return $status;
         }
     }
 
     return $status;
+}
+function checkRequirements($conn, $city_id, $item) {
+    if (empty($item['requirements']) || $item['requirements'] === '{}' || $item['requirements'] === 'null') {
+        return ['status' => true, 'message' => ''];
+    }
+
+    $reqs = json_decode($item['requirements'], true);
+    if (!is_array($reqs) || empty($reqs)) {
+        return ['status' => true, 'message' => ''];
+    }
+
+    $missing = [];
+
+    foreach ($reqs as $reqItem => $reqQty) {
+        $current = getCityItemTotal($conn, $city_id, $reqItem);
+        if ($current < $reqQty) {
+            $missing[] = "• {$reqItem} (نیاز: {$reqQty} | موجود: {$current})";
+        }
+    }
+
+    if (!empty($missing)) {
+        return [
+            'status' => false,
+            'message' => "❌ پیش‌نیازهای زیر کامل نیست:\n" . implode("\n", $missing)
+        ];
+    }
+
+    return ['status' => true, 'message' => ''];
 }
 function getOneTimePurchaseStatus($conn, $city_id, $item_name) {
     $q = mysqli_query($conn, "SELECT 1 FROM `shop_one_time_log` WHERE `city_id`='{$city_id}' AND `item_name`='{$item_name}' LIMIT 1");
     return mysqli_num_rows($q) > 0;
 }
 
-function getDailyBought($conn, $city_id, $item_name) {
-    $today = date('Y-m-d');
+function getDailyBought($conn, $city_id, $item_name) { 
     $q = mysqli_query($conn, "SELECT SUM(quantity) as total FROM `shop_daily_log` 
-                              WHERE `city_id`='{$city_id}' AND `item_name`='{$item_name}' AND `date`='{$today}'");
+                              WHERE `city_id`='{$city_id}' AND `item_name`='{$item_name}' ");
     $row = mysqli_fetch_assoc($q);
     return (int)($row['total'] ?? 0);
 }
