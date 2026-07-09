@@ -605,7 +605,7 @@ function getUpgradeItem($conn, $itemName) {
 // سطح فعلی
 function getCurrentLevel($conn, $city_id, $itemName) {
     global $cityBuildingsTable, $cityCampsTable;
-    $tables = [$cityBuildingsTable, $cityCampsTable];
+    $tables = [$cityBuildingsTable, $cityCampsTable, $cityItemsTable];
     foreach ($tables as $table) {
         $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$itemName` FROM `$table` WHERE `city id`='{$city_id}' LIMIT 1"));
         if (!empty($row[$itemName])) {
