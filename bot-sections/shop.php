@@ -117,7 +117,7 @@ else if ($playerStep == "shop_buy_1" && $data) {
         $keyboard = json_encode([['inline_keyboard' => [[['text' => '🔙 بازگشت', 'callback_data' => 'shop_buy']]]]]);
     } else {
         $text .= "🧮 **چند واحد می‌خواهید بخرید؟**";
-        $keyboard = json_encode([['inline_keyboard' => [[['text' => '🔙 بازگشت', 'callback_data' => 'shop_buy']]]]]);
+        $keyboard = $Back ;
         $conn->query("UPDATE `$citiesTable` SET `step`='shop_buy_2@{$itemName}' WHERE `city id`='{$chat_id}' LIMIT 1");
     }
 
