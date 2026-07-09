@@ -53,7 +53,7 @@ else if ($playerStep == "upgrade_1" && $data) {
         $conn->query("UPDATE `$citiesTable` SET `step`='upgrade_2@{$itemName}@{$nextLevel}' WHERE `city id`='{$chat_id}' LIMIT 1");
     }
 
-    bot('EditMessageText', ['chat_id' => $chat_id, 'message_id' => $message_id, 'text' => $text, 'parse_mode' => 'HTML', 'reply_markup' => $keyboard]);
+    EditMessageText($chatId, $messageId, $text, "HTML", $keyboard); 
 }
 
 // تأیید نهایی ارتقا
@@ -149,10 +149,9 @@ else if (strpos($playerStep, "shop_buy_2@") !== false && is_numeric($text) && (i
     $confirmText = "✅ **تأیید خرید**\n\n".
                    "📦 {$quantity} واحد " . ($item['persian_name'] ?? $itemName) . "\n\n".
                    "💰 هزینه کل:\n" . formatCosts($conn, $totalCost);
-
     bot('EditMessageText', [
-        'chat_id' => $chat_id,
-        'message_id' => $message_id,
+        'chat_id' => $chatId,
+        'message_id' => $messageId,
         'text' => $confirmText,
         'parse_mode' => 'HTML',
         'reply_markup' => $inlineYesOrNo
