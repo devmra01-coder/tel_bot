@@ -148,7 +148,7 @@ else if (strpos($playerStep, "shop_buy_2@") !== false && is_numeric($text) && (i
     $totalCost = calculateTotalCost($item, $quantity);
     $confirmText = "✅ **تأیید خرید**\n\n".
                    "📦 {$quantity} واحد " . ($item['persian_name'] ?? $itemName) . "\n\n".
-                   "💰 هزینه کل:\n" . formatCosts($totalCost);
+                   "💰 هزینه کل:\n" . formatCosts($conn, $totalCost);
 
     bot('sendMessage', [
         'chat_id' => $chat_id,
