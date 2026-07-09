@@ -468,60 +468,31 @@ function calculateTotalCost($item, $quantity) {
  * نسخه دقیق و بهینه
  */
 function formatCosts($conn, $costs) {
-    if (empty($costs)) {
-        return "بدون هزینه";
-    }
-
-    // تبدیل JSON string به آرایه اگر لازم باشد
-    if (is_string($costs)) {
-        $costs = json_decode($costs, true);
-    }
-
-    if (!is_array($costs) || empty($costs)) {
-        return "بدون هزینه";
-    }
-
-    $output = [];
-    
-    foreach ($costs as $english => $amount) {
-        if ((int)$amount <= 0) continue;
-
-        // جستجوی نام فارسی در دیتابیس
-        $stmt = mysqli_prepare($conn, "SELECT `persian name` 
-                                       FROM `$itemsTable` 
-                                       WHERE `english name` = ? 
-                                       LIMIT 1");
-        
-        mysqli_stmt_bind_param($stmt, "s", $english);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
-        $row = mysqli_fetch_assoc($result);
-        mysqli_stmt_close($stmt);
-
-        // نام نمایش داده شده (فارسی یا انگلیسی به عنوان پشتیبان)
-        $displayName = !empty($row['persian name']) ? $row['persian name'] : $english;
-
-        $output[] = "• {$displayName}: " . number_format($amount);
-    }
-
-    if (empty($output)) {
-        return "بدون هزینه";
-    }
-
-    return implode("\n", $output);
-}
-function formatCosts2($costs) {
     if (empty($costs)) return "بدون هزینه";
 
     $str = "";
-    foreach ($costs as $res => $amt) {
-        if ($amt > 0) {
-            $str .= "• {$res}: {$amt}\n";
+    foreach ($costs as $englishName => $amt) {
+        if ($amt <= 0) continue;
+
+        // نام فارسی را از جداول پیدا کن
+        $persianName = getPersianName($conn, $englishName);
+
+        $str .= "• {$persianName}: {$amt}\n";
+    }
+    return $str ?: "بدون هزینه";
+}
+function getPersianName($conn, $englishName) {
+    $tables = ['itemsTable', 'peopleTable', 'soldiersTable'];
+    foreach ($tables as $tableVar) {
+        global $$tableVar;
+        $table = $$tableVar;
+        $q = mysqli_query($conn, "SELECT `persian name` FROM `{$table}` WHERE `english name` = '{$englishName}' LIMIT 1");
+        if ($row = mysqli_fetch_assoc($q)) {
+            return $row['persian name'];
         }
     }
-    return $str;
+    return $englishName; // fallback
 }
-
 
 // ===============================================
 // کسر منابع
