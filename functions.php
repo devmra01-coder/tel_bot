@@ -657,8 +657,10 @@ function executeUpgrade($conn, $city_id, $item, $nextLevel, $cityBuildingsTable,
         return ['success' => false, 'message' => 'منابع کافی برای ارتقا وجود ندارد.'];
     }
 
-    // اعمال ارتقا (مثل addItemToCity)
-    $tables = [$cityBuildingsTable, $cityCampsTable];
+    // اعمال ارتقا (ساختمان/کمپ یا آیتم دارایی)
+    $tables = [$cityBuildingsTable, $cityCampsTable, $cityItemsTable, $cityPeopleTable, $citySoldiersTable];
+    $updated = false;
+
     foreach ($tables as $table) {
         $q = mysqli_query($conn, "SHOW COLUMNS FROM `{$table}` LIKE '{$item['item_name']}'");
         if (mysqli_num_rows($q) > 0) {
@@ -676,8 +678,13 @@ function executeUpgrade($conn, $city_id, $item, $nextLevel, $cityBuildingsTable,
             }
 
             $conn->query("UPDATE `{$table}` SET `{$item['item_name']}` = '{$newValue}' WHERE `city id` = '{$city_id}' LIMIT 1");
+            $updated = true;
             break;
         }
+    }
+
+    if (!$updated) {
+        return ['success' => false, 'message' => 'جدول مربوطه برای ارتقا یافت نشد.'];
     }
 
     if (!empty($item['daily_limit']) && $item['daily_limit'] > 0) {
