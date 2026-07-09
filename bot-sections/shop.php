@@ -42,7 +42,7 @@ else if ($playerStep == "upgrade_1" && $data) {
 
     $text = "⚒ ارتقای <b>{$item['persian_name']}</b>\n";
     $text .= "📊 سطح فعلی: {$currentLevel} → {$nextLevel}\n\n";
-    $text .= "💰 هزینه ارتقا:\n" . formatCosts($costs) . "\n\n";
+    $text .= "💰 هزینه ارتقا:\n" .  formatCosts($conn, $costs) . "\n\n";
 
     if (!$status['can_upgrade']) {
         $text .= "❌ " . $status['message'];
