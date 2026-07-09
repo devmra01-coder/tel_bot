@@ -463,14 +463,7 @@ function calculateTotalCost($item, $quantity) {
     }
     return $total;
 }
-
-/**
- * نمایش هزینه‌ها با نام فارسی منابع
- * 
- * @param mysqli $conn
- * @param array|string $costs  آرایه JSON هزینه‌ها (مثلاً {"gold":500, "wood":200})
- * @return string
- */ // نمایش هزینه‌ها
+ 
 function formatCosts($costs) {
     if (empty($costs)) return "بدون هزینه";
 
@@ -482,6 +475,7 @@ function formatCosts($costs) {
     }
     return $str;
 }
+
 
 // ===============================================
 // کسر منابع
