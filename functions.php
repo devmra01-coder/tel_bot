@@ -463,8 +463,54 @@ function calculateTotalCost($item, $quantity) {
     }
     return $total;
 }
- 
-function formatCosts($costs) {
+ /**
+ * نمایش هزینه‌ها با نام فارسی منابع
+ * نسخه دقیق و بهینه
+ */
+function formatCosts($conn, $costs) {
+    if (empty($costs)) {
+        return "بدون هزینه";
+    }
+
+    // تبدیل JSON string به آرایه اگر لازم باشد
+    if (is_string($costs)) {
+        $costs = json_decode($costs, true);
+    }
+
+    if (!is_array($costs) || empty($costs)) {
+        return "بدون هزینه";
+    }
+
+    $output = [];
+    
+    foreach ($costs as $english => $amount) {
+        if ((int)$amount <= 0) continue;
+
+        // جستجوی نام فارسی در دیتابیس
+        $stmt = mysqli_prepare($conn, "SELECT `persian name` 
+                                       FROM `$itemsTable` 
+                                       WHERE `english name` = ? 
+                                       LIMIT 1");
+        
+        mysqli_stmt_bind_param($stmt, "s", $english);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
+        $row = mysqli_fetch_assoc($result);
+        mysqli_stmt_close($stmt);
+
+        // نام نمایش داده شده (فارسی یا انگلیسی به عنوان پشتیبان)
+        $displayName = !empty($row['persian name']) ? $row['persian name'] : $english;
+
+        $output[] = "• {$displayName}: " . number_format($amount);
+    }
+
+    if (empty($output)) {
+        return "بدون هزینه";
+    }
+
+    return implode("\n", $output);
+}
+function formatCosts2($costs) {
     if (empty($costs)) return "بدون هزینه";
 
     $str = "";
