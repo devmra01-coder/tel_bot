@@ -604,13 +604,17 @@ function getUpgradeItem($conn, $itemName) {
 
 // سطح فعلی
 function getCurrentLevel($conn, $city_id, $itemName) {
-    global $cityBuildingsTable, $cityCampsTable;
-    $tables = [$cityBuildingsTable, $cityCampsTable, $cityItemsTable];
+    global $cityBuildingsTable, $cityCampsTable, $cityItemsTable, $cityPeopleTable, $citySoldiersTable;
+    $tables = [$cityBuildingsTable, $cityCampsTable, $cityItemsTable, $cityPeopleTable, $citySoldiersTable];
+
     foreach ($tables as $table) {
-        $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `$itemName` FROM `$table` WHERE `city id`='{$city_id}' LIMIT 1"));
-        if (!empty($row[$itemName])) {
-            $parts = explode("@", $row[$itemName]);
-            return (int)($parts[1] ?? 1);
+        $q = mysqli_query($conn, "SHOW COLUMNS FROM `$table` LIKE '{$itemName}'");
+        if (mysqli_num_rows($q) > 0) {
+            $row = mysqli_fetch_assoc(mysqli_query($conn, "SELECT `{$itemName}` FROM `$table` WHERE `city id`='{$city_id}' LIMIT 1"));
+            if (!empty($row[$itemName])) {
+                $parts = explode("@", $row[$itemName]);
+                return (int)($parts[1] ?? 1);
+            }
         }
     }
     return 1;
